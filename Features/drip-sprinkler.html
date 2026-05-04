@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroFlow — Drip & Sprinkler Water Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--earth:#1a3a0e;--leaf:#2d6a1f;--sprout:#5a9e2f;--lime:#7ec850;--mist:#c8e6a8;--sky:#eaf5e1;--gold:#c8870a;--amber:#f0a830;--cream:#f7f4ec;--white:#ffffff;--text:#152b0a;--muted:#5a7050;--dark:#0e1f08;--blue:#1a6bb5;--sky-blue:#e8f4fd}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden}
+nav{background:rgba(14,31,8,0.97);padding:0 6%;display:flex;align-items:center;justify-content:space-between;height:64px;border-bottom:1px solid rgba(90,158,47,0.25)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--lime);text-decoration:none}
+.nav-logo .drop{color:var(--amber);font-style:italic}
+.nav-badge{background:rgba(90,158,47,.2);border:1px solid rgba(90,158,47,.4);color:var(--lime);padding:4px 14px;border-radius:100px;font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.page-hero{background:linear-gradient(135deg,#0d2744 0%,#1a3a60 50%,#2d6a1f 100%);padding:60px 6%;position:relative;overflow:hidden}
+.page-hero::before{content:'🌧️';position:absolute;right:5%;top:50%;transform:translateY(-50%);font-size:10rem;opacity:.1}
+.tag{display:inline-flex;align-items:center;gap:8px;background:rgba(78,162,255,.15);border:1px solid rgba(78,162,255,.4);color:#7ec8ff;padding:5px 14px;border-radius:100px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px}
+.pdot{width:7px;height:7px;border-radius:50%;background:#7ec8ff;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(126,200,255,.7)}50%{box-shadow:0 0 0 8px rgba(126,200,255,0)}}
+.page-hero h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:900;color:#fff;line-height:1.1;margin-bottom:14px}
+.page-hero h1 span{color:var(--lime)}
+.page-hero p{color:rgba(200,230,168,.75);font-size:1rem;line-height:1.7;max-width:560px;font-weight:300}
+.main{padding:48px 6%;max-width:1300px;margin:0 auto;display:grid;grid-template-columns:340px 1fr;gap:32px;align-items:start}
+.card{background:var(--white);border-radius:20px;padding:32px;box-shadow:0 4px 24px rgba(26,58,14,.07);border:1px solid rgba(90,158,47,.1);animation:fadeUp .6s ease both;margin-bottom:24px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.card-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--earth);margin-bottom:6px}
+.card-sub{color:var(--muted);font-size:.85rem;margin-bottom:24px;line-height:1.6}
+.ctrl-group{margin-bottom:18px}
+.ctrl-group label{display:block;font-size:.8rem;font-weight:700;color:var(--earth);margin-bottom:7px}
+.ctrl-group select,.ctrl-group input{width:100%;padding:11px 14px;border:1.5px solid #d4e8c0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text);background:var(--sky);outline:none;transition:all .25s}
+.ctrl-group select:focus,.ctrl-group input:focus{border-color:var(--sprout);background:#fff;box-shadow:0 0 0 3px rgba(90,158,47,.1)}
+.analyze-btn{width:100%;padding:13px;background:linear-gradient(135deg,#1a4a8a,#2d6ab5);color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s}
+.analyze-btn:hover{background:linear-gradient(135deg,#2d6ab5,#4a90d9);transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,106,181,.35)}
+
+/* RAIN PROBABILITY */
+.rain-meter{text-align:center;margin:20px 0}
+.rain-circle{width:140px;height:140px;position:relative;margin:0 auto 16px}
+.rain-circle svg{width:100%;height:100%;transform:rotate(-90deg)}
+.rain-circle svg circle:first-child{fill:none;stroke:rgba(78,162,255,.15);stroke-width:12}
+.rain-circle svg circle.bar{fill:none;stroke:#4aa2ff;stroke-width:12;stroke-linecap:round;stroke-dasharray:440;transition:stroke-dashoffset 1.5s cubic-bezier(.22,1,.36,1)}
+.rain-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.rain-pct{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:var(--earth)}
+.rain-lbl{font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+
+/* WEEK BARS */
+.week-chart{margin-top:4px}
+.week-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.week-label{font-size:.8rem;font-weight:600;color:var(--earth);width:60px;flex-shrink:0}
+.week-track{flex:1;height:20px;background:rgba(78,162,255,.08);border-radius:6px;overflow:hidden;position:relative}
+.week-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#4aa2ff,#7ec8ff);transition:width 1.2s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;justify-content:flex-end;padding-right:6px}
+.week-fill-text{font-size:.7rem;font-weight:700;color:#fff}
+.week-val{font-size:.8rem;font-weight:700;color:var(--blue);width:36px;text-align:right;flex-shrink:0}
+
+/* IRRIGATION MODE CARDS */
+.irri-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+.irri-card{border-radius:16px;padding:22px 20px;border:2px solid;transition:all .3s;cursor:default;position:relative;overflow:hidden}
+.irri-card::before{position:absolute;right:-10px;top:-10px;font-size:3.5rem;opacity:.1}
+.irri-card.drip{border-color:rgba(90,158,47,.3);background:linear-gradient(135deg,rgba(90,158,47,.05),rgba(126,200,80,.03))}
+.irri-card.drip::before{content:'💧'}
+.irri-card.drip.recommended{border-color:var(--sprout);background:linear-gradient(135deg,rgba(90,158,47,.12),rgba(126,200,80,.06))}
+.irri-card.sprinkler{border-color:rgba(78,162,255,.3);background:linear-gradient(135deg,rgba(78,162,255,.05),rgba(126,200,255,.03))}
+.irri-card.sprinkler::before{content:'🌀'}
+.irri-card.sprinkler.recommended{border-color:#4aa2ff;background:linear-gradient(135deg,rgba(78,162,255,.12),rgba(126,200,255,.06))}
+.irri-title{font-weight:700;font-size:1rem;color:var(--earth);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.irri-rec-badge{background:var(--sprout);color:#fff;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:100px;letter-spacing:.5px}
+.irri-rec-badge.blue{background:#4aa2ff}
+.irri-desc{font-size:.82rem;color:var(--muted);line-height:1.5;margin-bottom:12px}
+.irri-stat{font-size:.8rem;font-weight:700;color:var(--earth)}
+.irri-stat span{color:var(--sprout)}
+.irri-stat span.blue{color:#4aa2ff}
+
+/* STATUS BANNER */
+.status-banner{border-radius:14px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:24px;border:2px solid}
+.status-banner.rain-yes{background:linear-gradient(135deg,rgba(78,162,255,.1),rgba(78,162,255,.05));border-color:rgba(78,162,255,.4)}
+.status-banner.rain-no{background:linear-gradient(135deg,rgba(240,168,48,.1),rgba(240,168,48,.05));border-color:rgba(240,168,48,.4)}
+.status-icon{font-size:2.4rem;flex-shrink:0}
+.status-text h3{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--earth);margin-bottom:4px}
+.status-text p{font-size:.85rem;color:var(--muted);line-height:1.5}
+
+/* CALENDAR RAIN */
+.rain-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px}
+.cal-day{aspect-ratio:1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;color:var(--muted);background:var(--sky);border:1px solid rgba(90,158,47,.08)}
+.cal-day.rain-day{background:rgba(78,162,255,.15);border-color:rgba(78,162,255,.3);color:#1a6bb5}
+.cal-day.heavy-rain{background:rgba(78,162,255,.35);border-color:rgba(78,162,255,.5);color:#0d4488}
+.cal-day-num{font-size:.7rem;font-weight:700}
+.cal-day-icon{font-size:.75rem}
+
+@media(max-width:900px){.main{grid-template-columns:1fr}.irri-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="#">Agro<span class="drop">Flow</span> 💧</a>
+  <span class="nav-badge">🌧️ Feature 03</span>
+</nav>
+
+<div class="page-hero">
+  <div class="tag"><div class="pdot"></div>Irrigation Intelligence Module</div>
+  <h1>Drip & Sprinkler <span>Water</span></h1>
+  <p>Analyse whether it will rain next month — and get the right irrigation mode recommendation based on predicted weather patterns.</p>
+</div>
+
+<div class="main">
+  <!-- LEFT: INPUT -->
+  <div>
+    <div class="card" style="animation-delay:.1s">
+      <div class="card-title">⚙️ Analysis Settings</div>
+      <div class="card-sub">Select your location and target month to predict rainfall.</div>
+      <div class="ctrl-group">
+        <label>Select State</label>
+        <select id="stateSel">
+          <option value="">-- Select State --</option>
+          <option value="UP">Uttar Pradesh</option>
+          <option value="Punjab">Punjab</option>
+          <option value="Haryana">Haryana</option>
+          <option value="Raj">Rajasthan</option>
+          <option value="MH">Maharashtra</option>
+          <option value="Kerala">Kerala</option>
+          <option value="MP">Madhya Pradesh</option>
+          <option value="Bihar">Bihar</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>Target Month</label>
+        <select id="monthSel">
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>Crop Type</label>
+        <select id="cropSel">
+          <option value="wheat">Wheat</option>
+          <option value="rice">Rice / Paddy</option>
+          <option value="cotton">Cotton</option>
+          <option value="vegetables">Vegetables</option>
+          <option value="groundnut">Groundnut</option>
+        </select>
+      </div>
+      <button class="analyze-btn" onclick="analyzeRain()">🌦️ Predict Rainfall & Irrigation</button>
+    </div>
+
+    <!-- RAIN PROBABILITY GAUGE -->
+    <div class="card" style="animation-delay:.2s">
+      <div class="card-title">🌧️ Rain Probability</div>
+      <div class="rain-meter">
+        <div class="rain-circle">
+          <svg viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="70"/>
+            <circle class="bar" id="rainGauge" cx="80" cy="80" r="70" stroke-dashoffset="440"/>
+          </svg>
+          <div class="rain-center">
+            <div class="rain-pct" id="rainPct">—%</div>
+            <div class="rain-lbl">Rain Chance</div>
+          </div>
+        </div>
+        <div style="font-size:.85rem;color:var(--muted);text-align:center" id="rainLabel">Select location to predict</div>
+      </div>
+
+      <!-- WEEK BY WEEK -->
+      <div class="card-title" style="font-size:.95rem;margin-bottom:12px">Week-wise Forecast</div>
+      <div class="week-chart" id="weekChart">
+        <div style="color:var(--muted);font-size:.85rem;font-style:italic">Generate prediction first</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: RESULTS -->
+  <div>
+    <div class="card" style="animation-delay:.1s">
+      <div class="card-title">🔍 Irrigation Recommendation</div>
+      <div class="card-sub" id="recSub">Predict rainfall to get irrigation mode recommendation</div>
+
+      <div id="statusBanner" style="display:none"></div>
+
+      <div class="irri-grid" id="irriGrid">
+        <div class="irri-card drip">
+          <div class="irri-title">💧 Drip Irrigation</div>
+          <div class="irri-desc">Delivers water directly to roots. Best for dry conditions. Saves 30-50% water vs flood irrigation.</div>
+          <div class="irri-stat">Efficiency: <span>90%+</span></div>
+        </div>
+        <div class="irri-card sprinkler">
+          <div class="irri-title">🌀 Sprinkler System</div>
+          <div class="irri-desc">Simulates rainfall evenly across field. Best for light to moderate supplemental irrigation needs.</div>
+          <div class="irri-stat">Coverage: <span class="blue">Uniform</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RAIN CALENDAR -->
+    <div class="card" style="animation-delay:.2s">
+      <div class="card-title">📅 Monthly Rain Calendar</div>
+      <div class="card-sub" id="calSub">Rain day forecast for selected month</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--muted)"><div style="width:12px;height:12px;border-radius:3px;background:rgba(78,162,255,.15);border:1px solid rgba(78,162,255,.3)"></div>Light Rain</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--muted)"><div style="width:12px;height:12px;border-radius:3px;background:rgba(78,162,255,.35);border:1px solid rgba(78,162,255,.5)"></div>Heavy Rain</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--muted)"><div style="width:12px;height:12px;border-radius:3px;background:var(--sky)"></div>Dry Day</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:8px">
+        <div style="text-align:center;font-size:.65rem;font-weight:700;color:var(--muted);padding:4px">SUN</div>
+        <div style="text-align:center;font-size:.65rem;font-weight:700;color:var(--muted);padding:4px">MON</div>
+        <div style="text-align:center;font-size:.65rem;font-weight:700;color:var(--muted);padding:4px">TUE</div>
+        <div style="text-align:center;font-size:.65rem;font-weight:700;color:var(--muted);padding:4px">WED</div>
+        <div style="text-align:center;font-size:.65rem;font-weight:700;color:var(--muted);padding:4px">THU</div>
+        <div style="text-align:center;font-size:.65rem;font-weight:700;color:var(--muted);padding:4px">FRI</div>
+        <div style="text-align:center;font-size:.65rem;font-weight:700;color:var(--muted);padding:4px">SAT</div>
+      </div>
+      <div class="rain-calendar" id="rainCalendar">
+        <div style="grid-column:1/-1;color:var(--muted);font-size:.85rem;font-style:italic;padding:16px;text-align:center">Predict rainfall to see calendar</div>
+      </div>
+
+      <!-- IRRIGATION SCHEDULE -->
+      <div style="margin-top:24px">
+        <div class="card-title" style="font-size:.95rem;margin-bottom:12px">💦 Irrigation Schedule Adjustments</div>
+        <div id="irriSchedule" style="color:var(--muted);font-size:.85rem;font-style:italic">Generate prediction first</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// State rainfall data: [rainChance%, avg_mm_per_month]
+const stateRain = {
+  UP:    {6:75,7:88,8:85,9:65,10:20,11:5,12:3,1:4,2:5,3:8,4:12,5:18},
+  Punjab:{6:40,7:72,8:70,9:45,10:12,11:4,12:3,1:6,2:7,3:8,4:10,5:14},
+  Haryana:{6:38,7:68,8:65,9:40,10:10,11:3,12:2,1:5,2:6,3:8,4:10,5:15},
+  Raj:   {6:25,7:55,8:50,9:30,10:6,11:2,12:1,1:3,2:3,3:4,4:5,5:8},
+  MH:    {6:80,7:92,8:90,9:72,10:30,11:8,12:2,1:2,2:2,3:4,4:10,5:20},
+  Kerala:{6:88,7:95,8:92,9:80,10:65,11:30,12:15,1:8,2:5,3:8,4:25,5:55},
+  MP:    {6:65,7:82,8:80,9:60,10:18,11:5,12:2,1:3,2:4,3:6,4:10,5:15},
+  Bihar: {6:70,7:86,8:84,9:62,10:18,11:4,12:2,1:3,2:5,3:7,4:12,5:20},
+};
+
+const monthNames = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function analyzeRain(){
+  const state = document.getElementById('stateSel').value;
+  const month = parseInt(document.getElementById('monthSel').value);
+  const crop = document.getElementById('cropSel').value;
+  if(!state){ alert('Please select a state'); return; }
+
+  const prob = stateRain[state][month];
+
+  // Gauge
+  const offset = 440 - (prob/100)*440;
+  document.getElementById('rainGauge').style.strokeDashoffset = offset;
+  document.getElementById('rainGauge').style.stroke = prob>60?'#4aa2ff':prob>35?'#7ec850':'#f0a830';
+  document.getElementById('rainPct').textContent = prob+'%';
+  const label = prob>70?'🌧️ High Rain Expected':prob>40?'🌦️ Moderate Rain Possible':prob>20?'⛅ Low Rain Chance':'☀️ Very Low — Dry Month';
+  document.getElementById('rainLabel').textContent = label;
+
+  // Week bars
+  const weeks = [
+    {label:'Week 1', pct: Math.min(100,prob+Math.floor(Math.random()*15-7))},
+    {label:'Week 2', pct: Math.min(100,prob+Math.floor(Math.random()*15-7))},
+    {label:'Week 3', pct: Math.min(100,prob+Math.floor(Math.random()*15-7))},
+    {label:'Week 4', pct: Math.min(100,prob+Math.floor(Math.random()*10-5))},
+  ];
+  const weekChart = document.getElementById('weekChart');
+  weekChart.innerHTML = weeks.map(w=>`
+    <div class="week-row">
+      <div class="week-label">${w.label}</div>
+      <div class="week-track"><div class="week-fill" style="width:0%" data-pct="${w.pct}"><span class="week-fill-text">${w.pct}%</span></div></div>
+      <div class="week-val">${w.pct}%</div>
+    </div>`).join('');
+  setTimeout(()=>weekChart.querySelectorAll('.week-fill').forEach(el=>el.style.width=el.dataset.pct+'%'),100);
+
+  // Status banner
+  const banner = document.getElementById('statusBanner');
+  banner.style.display='flex';
+  if(prob>=60){
+    banner.className='status-banner rain-yes';
+    banner.innerHTML=`<div class="status-icon">🌧️</div><div class="status-text"><h3>Rain Expected in ${monthNames[month]}</h3><p>With ${prob}% probability, significant rainfall is predicted. Reduce artificial irrigation accordingly. Use Sprinkler for light supplemental irrigation only.</p></div>`;
+  } else {
+    banner.className='status-banner rain-no';
+    banner.innerHTML=`<div class="status-icon">☀️</div><div class="status-text"><h3>Low Rainfall in ${monthNames[month]}</h3><p>Only ${prob}% rain probability. Regular irrigation is essential. Drip irrigation recommended to conserve water and ensure crop health.</p></div>`;
+  }
+
+  // Recommendation
+  document.getElementById('recSub').textContent = `Best irrigation mode for ${crop} in ${monthNames[month]}`;
+  const grid = document.getElementById('irriGrid');
+  const dripRec = prob < 50;
+  grid.innerHTML = `
+    <div class="irri-card drip ${dripRec?'recommended':''}">
+      <div class="irri-title">💧 Drip Irrigation${dripRec?'<span class="irri-rec-badge">✓ RECOMMENDED</span>':''}</div>
+      <div class="irri-desc">${dripRec?'Best choice for dry conditions. Delivers water to roots, minimises evaporation loss.':'Suitable as supplemental. Rain will provide base moisture.'}</div>
+      <div class="irri-stat">Water Saving: <span>${dripRec?'40-50%':'20-30%'}</span></div>
+    </div>
+    <div class="irri-card sprinkler ${!dripRec?'recommended':''}">
+      <div class="irri-title">🌀 Sprinkler${!dripRec?'<span class="irri-rec-badge blue">✓ RECOMMENDED</span>':''}</div>
+      <div class="irri-desc">${!dripRec?'Rain expected. Sprinkler for even top-up irrigation when rain is insufficient.':'Not ideal in dry months — high evaporation loss.'}</div>
+      <div class="irri-stat">Coverage: <span class="blue">Uniform Field</span></div>
+    </div>`;
+
+  // Calendar
+  const cal = document.getElementById('rainCalendar');
+  cal.innerHTML = '';
+  const daysInMonth = new Date(2025, month, 0).getDate();
+  const startDay = new Date(2025, month-1, 1).getDay();
+  for(let i=0;i<startDay;i++){
+    const empty = document.createElement('div');
+    cal.appendChild(empty);
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const div = document.createElement('div');
+    div.className = 'cal-day';
+    const r = Math.random()*100;
+    let cls='', icon='';
+    if(r < prob*0.4){ cls='heavy-rain'; icon='⛈'; }
+    else if(r < prob*0.9){ cls='rain-day'; icon='🌧'; }
+    else { icon='☀'; }
+    if(cls) div.classList.add(cls);
+    div.innerHTML = `<div class="cal-day-num">${d}</div><div class="cal-day-icon">${icon}</div>`;
+    cal.appendChild(div);
+  }
+  document.getElementById('calSub').textContent = `Rain forecast for ${monthNames[month]} — ${state}`;
+
+  // Schedule
+  document.getElementById('irriSchedule').innerHTML = prob>=70
+    ? `<div style="background:rgba(78,162,255,.08);border:1px solid rgba(78,162,255,.3);border-radius:10px;padding:14px;font-size:.85rem;color:#1a6bb5;line-height:1.6">
+        🌧️ <strong>Heavy Rain Month:</strong> Skip irrigation on rainy days. Run sprinkler at 30% capacity on dry days only. Turn off pumps during active rainfall to prevent waterlogging.
+       </div>`
+    : prob>=40
+    ? `<div style="background:rgba(90,158,47,.08);border:1px solid rgba(90,158,47,.2);border-radius:10px;padding:14px;font-size:.85rem;color:var(--leaf);line-height:1.6">
+        🌦️ <strong>Moderate Rain Month:</strong> Run drip irrigation on non-rain days. Reduce watering frequency by 30%. Monitor soil moisture before each cycle.
+       </div>`
+    : `<div style="background:rgba(240,168,48,.08);border:1px solid rgba(240,168,48,.3);border-radius:10px;padding:14px;font-size:.85rem;color:var(--gold);line-height:1.6">
+        ☀️ <strong>Dry Month:</strong> Full drip irrigation required. Run morning cycles daily. Increase frequency for sensitive crops like vegetables. Check soil moisture every 2 days.
+       </div>`;
+}
+</script>
+</body>
+</html>

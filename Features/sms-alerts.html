@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroFlow — Instant SMS Alerts</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--earth:#1a3a0e;--leaf:#2d6a1f;--sprout:#5a9e2f;--lime:#7ec850;--mist:#c8e6a8;--sky:#eaf5e1;--gold:#c8870a;--amber:#f0a830;--cream:#f7f4ec;--white:#ffffff;--text:#152b0a;--muted:#5a7050;--dark:#0e1f08;--red:#e74c3c;--orange:#f39c12}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden}
+nav{background:rgba(14,31,8,0.97);padding:0 6%;display:flex;align-items:center;justify-content:space-between;height:64px;border-bottom:1px solid rgba(90,158,47,0.25)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--lime);text-decoration:none}
+.nav-logo .drop{color:var(--amber);font-style:italic}
+.nav-badge{background:rgba(231,76,60,.2);border:1px solid rgba(231,76,60,.4);color:#ff8a80;padding:4px 14px;border-radius:100px;font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.page-hero{background:linear-gradient(135deg,#1a0808 0%,#3a0e0e 40%,#2d1f0e 80%,var(--earth) 100%);padding:60px 6%;position:relative;overflow:hidden}
+.page-hero::before{content:'📱';position:absolute;right:5%;top:50%;transform:translateY(-50%);font-size:10rem;opacity:.07}
+.tag{display:inline-flex;align-items:center;gap:8px;background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.35);color:#ff8a80;padding:5px 14px;border-radius:100px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px}
+.pdot{width:7px;height:7px;border-radius:50%;background:#ff8a80;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.7)}50%{box-shadow:0 0 0 8px rgba(231,76,60,0)}}
+.page-hero h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:900;color:#fff;line-height:1.1;margin-bottom:14px}
+.page-hero h1 span{color:#ff8a80}
+.page-hero p{color:rgba(255,200,168,.7);font-size:1rem;line-height:1.7;max-width:560px;font-weight:300}
+
+.main{padding:40px 6%;max-width:1300px;margin:0 auto;display:grid;grid-template-columns:400px 1fr;gap:28px;align-items:start}
+.card{background:var(--white);border-radius:20px;padding:28px;box-shadow:0 4px 24px rgba(26,58,14,.07);border:1px solid rgba(90,158,47,.1);animation:fadeUp .6s ease both;margin-bottom:20px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.card-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--earth);margin-bottom:6px}
+.card-sub{color:var(--muted);font-size:.83rem;margin-bottom:20px;line-height:1.5}
+.ctrl-group{margin-bottom:16px}
+.ctrl-group label{display:block;font-size:.8rem;font-weight:700;color:var(--earth);margin-bottom:7px;letter-spacing:.3px}
+.ctrl-group input,.ctrl-group select{width:100%;padding:11px 14px;border:1.5px solid #d4e8c0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text);background:var(--sky);outline:none;transition:all .25s}
+.ctrl-group input:focus,.ctrl-group select:focus{border-color:var(--sprout);background:#fff;box-shadow:0 0 0 3px rgba(90,158,47,.1)}
+
+/* TOGGLE SWITCHES */
+.toggle-list{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--sky);border-radius:10px;padding:14px 16px}
+.toggle-info{display:flex;align-items:center;gap:10px}
+.toggle-icon{font-size:1.1rem}
+.toggle-label{font-size:.88rem;font-weight:600;color:var(--earth)}
+.toggle-desc{font-size:.75rem;color:var(--muted)}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:24px;cursor:pointer;transition:.3s}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle input:checked+.toggle-slider{background:var(--sprout)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px)}
+
+.save-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--leaf),var(--sprout));color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s}
+.save-btn:hover{background:linear-gradient(135deg,var(--sprout),var(--lime));transform:translateY(-2px);box-shadow:0 8px 24px rgba(90,158,47,.35)}
+.test-btn{width:100%;padding:11px;background:transparent;border:1.5px solid var(--sprout);color:var(--sprout);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .3s;margin-top:10px}
+.test-btn:hover{background:var(--sky)}
+
+/* ALERT LOG */
+.alert-log{display:flex;flex-direction:column;gap:10px}
+.alert-entry{border-radius:14px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;border:1.5px solid;position:relative;animation:slideIn .4s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
+.alert-entry.critical{background:rgba(231,76,60,.06);border-color:rgba(231,76,60,.3)}
+.alert-entry.warning{background:rgba(243,156,18,.06);border-color:rgba(243,156,18,.3)}
+.alert-entry.info{background:rgba(90,158,47,.06);border-color:rgba(90,158,47,.2)}
+.alert-entry.resolved{background:rgba(90,158,47,.04);border-color:rgba(90,158,47,.12);opacity:.75}
+.ae-icon{font-size:1.4rem;flex-shrink:0;margin-top:2px}
+.ae-body{flex:1}
+.ae-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.ae-title{font-weight:700;font-size:.9rem;color:var(--earth)}
+.ae-time{font-size:.72rem;color:var(--muted)}
+.ae-msg{font-size:.83rem;color:var(--muted);line-height:1.5}
+.ae-zone{font-size:.72rem;font-weight:700;margin-top:6px}
+.ae-zone.crit{color:var(--red)}.ae-zone.warn{color:var(--orange)}.ae-zone.ok{color:var(--sprout)}
+.severity-chip{padding:2px 10px;border-radius:100px;font-size:.68rem;font-weight:700;flex-shrink:0}
+.sc-critical{background:rgba(231,76,60,.15);color:var(--red)}
+.sc-warning{background:rgba(243,156,18,.15);color:var(--orange)}
+.sc-info{background:rgba(90,158,47,.15);color:var(--leaf)}
+.sc-resolved{background:rgba(90,158,47,.1);color:var(--sprout)}
+
+/* SMS MOCKUP */
+.phone-wrap{display:flex;justify-content:center;padding:8px 0 24px}
+.phone{width:260px;background:#1a1a2e;border-radius:40px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.3);border:3px solid #333}
+.phone-notch{width:70px;height:18px;background:#111;border-radius:10px;margin:0 auto 14px}
+.phone-screen{background:#f0f0f0;border-radius:28px;padding:14px;min-height:300px}
+.sms-header{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.sms-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--sprout),var(--earth));display:flex;align-items:center;justify-content:center;font-size:1rem}
+.sms-from{font-size:.8rem;font-weight:700;color:#1a1a1a}
+.sms-time{font-size:.65rem;color:#888;margin-left:auto}
+.sms-bubble{background:#fff;border-radius:14px 14px 14px 4px;padding:10px 13px;font-size:.75rem;color:#1a1a1a;line-height:1.55;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.sms-bubble strong{color:#c0392b;display:block;margin-bottom:4px}
+.sms-bubble.ok strong{color:#27ae60}
+
+/* STAT ROW */
+.stat-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.sm-box{background:var(--sky);border-radius:12px;padding:14px;text-align:center}
+.sm-val{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--earth)}
+.sm-lbl{font-size:.7rem;color:var(--muted);margin-top:3px}
+
+/* LIVE INDICATOR */
+.live-dot{width:8px;height:8px;border-radius:50%;background:#ff4444;display:inline-block;animation:pulse 1s infinite;margin-right:6px}
+
+@media(max-width:960px){.main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="#">Agro<span class="drop">Flow</span> 💧</a>
+  <span class="nav-badge">🚨 Feature 06</span>
+</nav>
+
+<div class="page-hero">
+  <div class="tag"><div class="pdot"></div>Alert System Module</div>
+  <h1>Instant <span>SMS Alerts</span></h1>
+  <p>Get instant SMS notifications for pipeline leaks, pump failures, and critically dry zones — before they damage your precious harvest.</p>
+</div>
+
+<div class="main">
+  <!-- LEFT: SETTINGS + PHONE -->
+  <div>
+    <!-- REGISTRATION -->
+    <div class="card" style="animation-delay:.1s">
+      <div class="card-title">📱 Alert Registration</div>
+      <div class="card-sub">Configure your phone number and alert preferences.</div>
+      <div class="ctrl-group">
+        <label>Mobile Number (Primary)</label>
+        <input type="tel" id="phone1" placeholder="+91 98765 43210">
+      </div>
+      <div class="ctrl-group">
+        <label>Mobile Number (Backup)</label>
+        <input type="tel" id="phone2" placeholder="+91 99999 88888 (optional)">
+      </div>
+      <div class="ctrl-group">
+        <label>Farmer Name</label>
+        <input type="text" id="farmerName" placeholder="Your name">
+      </div>
+      <div class="ctrl-group">
+        <label>Alert Language</label>
+        <select id="langSel">
+          <option>English</option>
+          <option>हिंदी (Hindi)</option>
+          <option>ਪੰਜਾਬੀ (Punjabi)</option>
+          <option>मराठी (Marathi)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- TOGGLES -->
+    <div class="card" style="animation-delay:.2s">
+      <div class="card-title">🔔 Alert Types</div>
+      <div class="card-sub">Enable or disable which alerts you want to receive.</div>
+      <div class="toggle-list">
+        <div class="toggle-row">
+          <div class="toggle-info"><span class="toggle-icon">🚧</span><div><div class="toggle-label">Pipeline Leak Alert</div><div class="toggle-desc">Detect leaks instantly via pressure drop</div></div></div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><span class="toggle-icon">⚙️</span><div><div class="toggle-label">Pump Failure Alert</div><div class="toggle-desc">Notify when pump stops unexpectedly</div></div></div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><span class="toggle-icon">🌵</span><div><div class="toggle-label">Critically Dry Zone</div><div class="toggle-desc">Alert when soil moisture drops below 20%</div></div></div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><span class="toggle-icon">🌊</span><div><div class="toggle-label">Over-Watering Alert</div><div class="toggle-desc">Prevent waterlogging in clay soils</div></div></div>
+          <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><span class="toggle-icon">🌧️</span><div><div class="toggle-label">Rain Forecast Alert</div><div class="toggle-desc">Auto-pause irrigation before rain</div></div></div>
+          <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info"><span class="toggle-icon">💡</span><div><div class="toggle-label">Daily Summary SMS</div><div class="toggle-desc">Morning summary at 6:00 AM daily</div></div></div>
+          <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+      <button class="save-btn" onclick="saveSettings()">💾 Save Alert Settings</button>
+      <button class="test-btn" onclick="sendTestSMS()">📤 Send Test SMS</button>
+    </div>
+
+    <!-- PHONE MOCKUP -->
+    <div class="card" style="animation-delay:.3s">
+      <div class="card-title">📱 SMS Preview</div>
+      <div class="card-sub">How alerts appear on your phone</div>
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="phone-notch"></div>
+          <div class="phone-screen" id="phoneScreen">
+            <div class="sms-header">
+              <div class="sms-logo">💧</div>
+              <div><div class="sms-from">AgroFlow</div></div>
+              <div class="sms-time">Just now</div>
+            </div>
+            <div class="sms-bubble">
+              <strong>🚨 PIPELINE LEAK DETECTED</strong>
+              Zone B — Pressure drop: 2.4 bar → 0.8 bar. Immediate action needed. Check pipeline near Block 3.<br><br>
+              📞 Call AgroFlow: 1800-XXX-XXXX
+            </div>
+            <div class="sms-bubble">
+              <strong>⚙️ PUMP FAILURE ALERT</strong>
+              Pump 2 stopped at 06:23 AM. Check motor/power supply. Zone A & B not irrigated.<br><br>
+              — AgroFlow Smart Irrigation
+            </div>
+            <div class="sms-bubble ok">
+              <strong>✅ SYSTEM RESTORED</strong>
+              Pump 2 back online. Irrigation resumed. All zones normal. — AgroFlow
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: LIVE ALERTS -->
+  <div>
+    <!-- STATS -->
+    <div class="stat-mini">
+      <div class="sm-box"><div class="sm-val" id="totalAlerts">7</div><div class="sm-lbl">Today's Alerts</div></div>
+      <div class="sm-box"><div class="sm-val" style="color:var(--red)" id="critAlerts">2</div><div class="sm-lbl">Critical</div></div>
+      <div class="sm-box"><div class="sm-val" style="color:var(--sprout)" id="resolvedAlerts">5</div><div class="sm-lbl">Resolved</div></div>
+    </div>
+
+    <!-- LIVE ALERT LOG -->
+    <div class="card" style="animation-delay:.1s">
+      <div class="card-title"><span class="live-dot"></span>Live Alert Log</div>
+      <div class="card-sub">Real-time feed of sensor alerts sent to your phone</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button onclick="filterAlerts('all')" id="f-all" style="padding:5px 14px;border-radius:100px;border:1.5px solid var(--sprout);background:var(--sprout);color:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">All</button>
+        <button onclick="filterAlerts('critical')" id="f-critical" style="padding:5px 14px;border-radius:100px;border:1.5px solid rgba(231,76,60,.4);background:transparent;color:var(--red);font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">Critical</button>
+        <button onclick="filterAlerts('warning')" id="f-warning" style="padding:5px 14px;border-radius:100px;border:1.5px solid rgba(243,156,18,.4);background:transparent;color:var(--orange);font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">Warning</button>
+        <button onclick="filterAlerts('resolved')" id="f-resolved" style="padding:5px 14px;border-radius:100px;border:1.5px solid rgba(90,158,47,.3);background:transparent;color:var(--sprout);font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">Resolved</button>
+        <button onclick="addRandomAlert()" style="margin-left:auto;padding:5px 14px;border-radius:100px;border:1.5px solid rgba(90,158,47,.3);background:var(--sky);color:var(--leaf);font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">+ Simulate Alert</button>
+      </div>
+      <div class="alert-log" id="alertLog"></div>
+    </div>
+
+    <!-- ZONE STATUS -->
+    <div class="card" style="animation-delay:.2s">
+      <div class="card-title">🗺️ Field Zone Status</div>
+      <div class="card-sub">Live status of all irrigation zones and sensors</div>
+      <div id="zoneGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const alertData = [
+  {type:'critical',icon:'🚧',title:'Pipeline Leak Detected',zone:'Zone B — Block 3',msg:'Pressure dropped from 2.4 bar to 0.8 bar. Possible leak in main line. SMS sent immediately.',time:'10:42 AM',resolved:false},
+  {type:'critical',icon:'⚙️',title:'Pump #2 Failure',zone:'Zone A & B',msg:'Pump motor stopped unexpectedly. Power supply disrupted. Zones A & B not irrigating.',time:'09:15 AM',resolved:false},
+  {type:'warning',icon:'🌵',title:'Critical Dry Zone',zone:'Zone C — Plot 7',msg:'Soil moisture dropped to 18% (critical threshold: 20%). Immediate irrigation required.',time:'08:30 AM',resolved:true},
+  {type:'warning',icon:'🌊',title:'Over-Watering Risk',zone:'Zone D — Clay Area',msg:'Soil moisture at 91%. Stop irrigation immediately to prevent waterlogging.',time:'07:55 AM',resolved:true},
+  {type:'info',icon:'🌧️',title:'Rain Forecast Alert',zone:'All Zones',msg:'Rain predicted at 68% probability for today evening. Irrigation auto-paused for 6 hours.',time:'06:00 AM',resolved:true},
+  {type:'info',icon:'✅',title:'Pump #2 Restored',zone:'Zone A & B',msg:'Pump back online after power restored. All zones now irrigating normally.',time:'09:45 AM',resolved:true},
+  {type:'info',icon:'📊',title:'Daily Summary',zone:'All Zones',msg:'Total water used: 4,200L. 3 zones optimal. 1 critical. Weather: 34°C, 45% humidity.',time:'06:01 AM',resolved:true},
+];
+
+let currentFilter = 'all';
+
+function renderAlerts(filter){
+  const log = document.getElementById('alertLog');
+  const data = filter==='all' ? alertData : alertData.filter(a=>filter==='resolved'?a.resolved:a.type===filter);
+  if(data.length===0){log.innerHTML='<div style="text-align:center;color:var(--muted);padding:24px;font-style:italic">No alerts in this category</div>';return;}
+  log.innerHTML = data.map(a=>`
+    <div class="alert-entry ${a.resolved?'resolved':a.type}">
+      <div class="ae-icon">${a.icon}</div>
+      <div class="ae-body">
+        <div class="ae-header">
+          <span class="ae-title">${a.title}</span>
+          <span class="ae-time">${a.time}</span>
+        </div>
+        <div class="ae-msg">${a.msg}</div>
+        <div class="ae-zone ${a.resolved?'ok':a.type==='critical'?'crit':'warn'}">
+          📍 ${a.zone} · ${a.resolved?'✅ Resolved':'🔴 Active'}
+        </div>
+      </div>
+      <span class="severity-chip ${a.resolved?'sc-resolved':a.type==='critical'?'sc-critical':a.type==='warning'?'sc-warning':'sc-info'}">
+        ${a.resolved?'Resolved':a.type==='critical'?'CRITICAL':a.type==='warning'?'Warning':'Info'}
+      </span>
+    </div>`).join('');
+}
+
+function filterAlerts(f){
+  currentFilter = f;
+  document.querySelectorAll('[id^="f-"]').forEach(b=>{
+    b.style.background='transparent';b.style.color=b.id==='f-critical'?'var(--red)':b.id==='f-warning'?'var(--orange)':'var(--sprout)';
+  });
+  document.getElementById('f-'+f).style.background=f==='critical'?'var(--red)':f==='warning'?'var(--orange)':'var(--sprout)';
+  document.getElementById('f-'+f).style.color='#fff';
+  renderAlerts(f);
+}
+
+const randomAlerts = [
+  {type:'critical',icon:'🚧',title:'Leak in Zone E',zone:'Zone E — Pipeline 5',msg:'Pressure anomaly detected. Leak suspected near pump outlet.',resolved:false},
+  {type:'warning',icon:'🌵',title:'Zone F Drying Fast',zone:'Zone F — Plot 12',msg:'Moisture at 22% and falling. Irrigation needed within 2 hours.',resolved:false},
+  {type:'info',icon:'✅',title:'Zone C Restored',zone:'Zone C',msg:'Soil moisture back to 52%. Irrigation completed successfully.',resolved:true},
+];
+let ri = 0;
+function addRandomAlert(){
+  const now = new Date();
+  const t = now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes()+' '+( now.getHours()<12?'AM':'PM');
+  const a = {...randomAlerts[ri%randomAlerts.length], time:t};
+  ri++;
+  alertData.unshift(a);
+  document.getElementById('totalAlerts').textContent = alertData.length;
+  document.getElementById('critAlerts').textContent = alertData.filter(a=>a.type==='critical'&&!a.resolved).length;
+  document.getElementById('resolvedAlerts').textContent = alertData.filter(a=>a.resolved).length;
+  renderAlerts(currentFilter);
+}
+
+// Zones
+const zones = [
+  {name:'Zone A',status:'Normal',moisture:65,color:'var(--sprout)'},
+  {name:'Zone B',status:'Leak Detected',moisture:70,color:'var(--red)'},
+  {name:'Zone C',status:'Normal',moisture:52,color:'var(--sprout)'},
+  {name:'Zone D',status:'Over-Watered',moisture:91,color:'var(--orange)'},
+  {name:'Zone E',status:'Normal',moisture:58,color:'var(--sprout)'},
+  {name:'Zone F',status:'Dry Warning',moisture:22,color:'var(--red)'},
+];
+document.getElementById('zoneGrid').innerHTML = zones.map(z=>`
+  <div style="background:var(--sky);border-radius:12px;padding:14px;border-left:3px solid ${z.color}">
+    <div style="font-weight:700;font-size:.85rem;color:var(--earth);margin-bottom:4px">${z.name}</div>
+    <div style="font-size:.72rem;font-weight:700;color:${z.color};margin-bottom:8px">${z.status}</div>
+    <div style="height:6px;background:rgba(0,0,0,.08);border-radius:3px;overflow:hidden">
+      <div style="height:100%;width:${z.moisture}%;background:${z.color};border-radius:3px;transition:width 1s ease"></div>
+    </div>
+    <div style="font-size:.75rem;color:var(--muted);margin-top:4px">${z.moisture}% moisture</div>
+  </div>`).join('');
+
+function saveSettings(){
+  const phone = document.getElementById('phone1').value;
+  const name = document.getElementById('farmerName').value;
+  if(!phone){alert('Please enter mobile number');return;}
+  const btn = document.querySelector('.save-btn');
+  btn.textContent='✅ Saved Successfully!';
+  btn.style.background='linear-gradient(135deg,#27ae60,#2ecc71)';
+  setTimeout(()=>{btn.textContent='💾 Save Alert Settings';btn.style.background='';},2500);
+}
+
+function sendTestSMS(){
+  const phone = document.getElementById('phone1').value;
+  const btn = document.querySelector('.test-btn');
+  btn.textContent='📤 Sending...';
+  btn.disabled=true;
+  setTimeout(()=>{
+    btn.textContent='✅ Test SMS Sent!';
+    btn.style.borderColor='var(--sprout)';
+    btn.style.color='var(--sprout)';
+    // Add to log
+    const now = new Date();
+    const t = now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes();
+    alertData.unshift({type:'info',icon:'📤',title:'Test Alert Sent',zone:`To: ${phone||'+91 XXXXX XXXXX'}`,msg:'This is a test alert from AgroFlow. If you received this, alerts are working correctly.',time:t+' (Just now)',resolved:true});
+    renderAlerts(currentFilter);
+    setTimeout(()=>{btn.textContent='📤 Send Test SMS';btn.disabled=false;btn.style.borderColor='';btn.style.color='';},3000);
+  },1500);
+}
+
+// Init
+renderAlerts('all');
+</script>
+</body>
+</html>

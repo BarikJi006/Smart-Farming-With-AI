@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroFlow — Weather Integration</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--earth:#1a3a0e;--leaf:#2d6a1f;--sprout:#5a9e2f;--lime:#7ec850;--mist:#c8e6a8;--sky:#eaf5e1;--gold:#c8870a;--amber:#f0a830;--cream:#f7f4ec;--white:#ffffff;--text:#152b0a;--muted:#5a7050;--dark:#0e1f08;--blue:#1a6bb5;--sky-blue:#e8f4fd}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden}
+nav{background:rgba(14,31,8,0.97);padding:0 6%;display:flex;align-items:center;justify-content:space-between;height:64px;border-bottom:1px solid rgba(90,158,47,0.25)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--lime);text-decoration:none}
+.nav-logo .drop{color:var(--amber);font-style:italic}
+.nav-badge{background:rgba(90,158,47,.2);border:1px solid rgba(90,158,47,.4);color:var(--lime);padding:4px 14px;border-radius:100px;font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+
+/* ANIMATED WEATHER HERO */
+.page-hero{background:linear-gradient(135deg,#0d2744 0%,#1a3a60 40%,#2d6a1f 100%);padding:60px 6%;position:relative;overflow:hidden;min-height:220px}
+.floating-clouds{position:absolute;top:20%;right:8%;display:flex;gap:16px;opacity:.12}
+.cloud{font-size:4rem;animation:float 4s ease-in-out infinite alternate}
+.cloud:nth-child(2){animation-delay:1s;font-size:5rem}
+.cloud:nth-child(3){animation-delay:2s;font-size:3rem}
+@keyframes float{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+.tag{display:inline-flex;align-items:center;gap:8px;background:rgba(78,162,255,.15);border:1px solid rgba(78,162,255,.4);color:#7ec8ff;padding:5px 14px;border-radius:100px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px}
+.pdot{width:7px;height:7px;border-radius:50%;background:#7ec8ff;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(126,200,255,.7)}50%{box-shadow:0 0 0 8px rgba(126,200,255,0)}}
+.page-hero h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:900;color:#fff;line-height:1.1;margin-bottom:14px}
+.page-hero h1 span{color:var(--lime)}
+.page-hero p{color:rgba(200,230,168,.75);font-size:1rem;line-height:1.7;max-width:540px;font-weight:300}
+
+/* SEARCH BAR */
+.search-wrap{padding:0 6%;margin-top:-24px;position:relative;z-index:10;max-width:700px}
+.city-search{display:flex;gap:0;background:var(--white);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.15);border:1.5px solid rgba(90,158,47,.2)}
+.city-search input{flex:1;padding:16px 20px;border:none;font-family:'DM Sans',sans-serif;font-size:1rem;color:var(--text);outline:none}
+.city-search select{border:none;border-left:1.5px solid rgba(90,158,47,.15);background:var(--sky);font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text);padding:0 16px;outline:none;min-width:130px}
+.city-search button{padding:16px 28px;background:linear-gradient(135deg,var(--sprout),var(--leaf));color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .25s}
+.city-search button:hover{background:linear-gradient(135deg,var(--lime),var(--sprout))}
+
+/* QUICK CITY PILLS */
+.city-pills{display:flex;gap:8px;padding:16px 6%;flex-wrap:wrap}
+.city-pill{padding:6px 16px;border-radius:100px;font-size:.8rem;font-weight:600;border:1.5px solid rgba(90,158,47,.25);color:var(--muted);cursor:pointer;background:var(--white);transition:all .25s}
+.city-pill:hover{border-color:var(--sprout);color:var(--sprout);background:var(--sky)}
+.city-pill.active{background:var(--sprout);color:#fff;border-color:var(--sprout)}
+
+.main{padding:24px 6%;max-width:1300px;margin:0 auto}
+.card{background:var(--white);border-radius:20px;padding:32px;box-shadow:0 4px 24px rgba(26,58,14,.07);border:1px solid rgba(90,158,47,.1);animation:fadeUp .6s ease both;margin-bottom:24px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.card-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--earth);margin-bottom:6px}
+.card-sub{color:var(--muted);font-size:.85rem;margin-bottom:24px;line-height:1.6}
+
+/* CURRENT WEATHER CARD */
+.weather-now{background:linear-gradient(135deg,#0d2744,#1a4a80);border-radius:20px;padding:36px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px}
+.weather-now::before{content:'';position:absolute;right:-60px;bottom:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.04)}
+.weather-city{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;margin-bottom:4px}
+.weather-date{font-size:.85rem;color:rgba(255,255,255,.6);margin-bottom:20px}
+.weather-temp{font-family:'Playfair Display',serif;font-size:4.5rem;font-weight:900;line-height:1;color:#fff}
+.weather-unit{font-size:1.5rem;vertical-align:top;margin-top:10px;display:inline-block;opacity:.7}
+.weather-cond{font-size:1rem;color:rgba(255,255,255,.8);margin-top:8px}
+.weather-emoji{font-size:5rem;opacity:.9}
+.weather-stats{display:flex;gap:24px;flex-wrap:wrap}
+.ws-item{text-align:center}
+.ws-val{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:#fff}
+.ws-lbl{font-size:.72rem;color:rgba(255,255,255,.55);letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+
+/* FORECAST ROW */
+.forecast-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:4px}
+.fc-day{background:var(--sky);border-radius:14px;padding:16px 10px;text-align:center;border:1.5px solid rgba(90,158,47,.1);transition:all .25s;cursor:default}
+.fc-day:hover{border-color:var(--sprout);transform:translateY(-4px);box-shadow:0 8px 20px rgba(90,158,47,.12)}
+.fc-day.today{background:linear-gradient(135deg,rgba(90,158,47,.15),rgba(126,200,80,.08));border-color:var(--sprout)}
+.fc-name{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.fc-icon{font-size:1.8rem;margin-bottom:8px;display:block}
+.fc-temp-max{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--earth)}
+.fc-temp-min{font-size:.8rem;color:var(--muted);margin-top:2px}
+.fc-rain-pct{font-size:.72rem;font-weight:700;color:#4aa2ff;margin-top:6px}
+
+/* RAIN PREDICTION TOGGLE */
+.rain-predict{background:linear-gradient(135deg,rgba(78,162,255,.08),rgba(78,162,255,.04));border:1.5px solid rgba(78,162,255,.25);border-radius:16px;padding:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin-bottom:24px}
+.rain-main{display:flex;align-items:center;gap:16px}
+.rain-big-icon{font-size:3rem}
+.rain-info h3{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--earth);margin-bottom:4px}
+.rain-info p{font-size:.85rem;color:var(--muted);line-height:1.5;max-width:400px}
+.rain-chance-big{font-family:'Playfair Display',serif;font-size:3rem;font-weight:900;color:#4aa2ff}
+.rain-chance-lbl{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+/* WEATHER DETAIL GRID */
+.detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.detail-card{background:var(--sky);border-radius:14px;padding:18px;text-align:center}
+.detail-icon{font-size:1.8rem;margin-bottom:8px}
+.detail-val{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--earth)}
+.detail-lbl{font-size:.72rem;color:var(--muted);margin-top:4px;letter-spacing:.3px;text-transform:uppercase}
+
+/* AGRI ALERT */
+.agri-alert{border-radius:12px;padding:14px 18px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;font-size:.85rem;line-height:1.5}
+.agri-alert.info{background:rgba(90,158,47,.08);border:1px solid rgba(90,158,47,.2);color:var(--leaf)}
+.agri-alert.warn{background:rgba(240,168,48,.08);border:1px solid rgba(240,168,48,.25);color:var(--gold)}
+.agri-alert.danger{background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.2);color:#c0392b}
+
+@media(max-width:1000px){.detail-grid{grid-template-columns:repeat(2,1fr)}.forecast-strip{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:600px){.forecast-strip{grid-template-columns:repeat(3,1fr)}.weather-stats{gap:16px}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="#">Agro<span class="drop">Flow</span> 💧</a>
+  <span class="nav-badge">☁️ Feature 05</span>
+</nav>
+
+<div class="page-hero">
+  <div class="floating-clouds"><span class="cloud">⛅</span><span class="cloud">🌤</span><span class="cloud">🌧</span></div>
+  <div class="tag"><div class="pdot"></div>Weather Intelligence Module</div>
+  <h1>Weather <span>Integration</span></h1>
+  <p>City-wise real-time weather display with rain probability forecast — know if it will rain before scheduling your irrigation.</p>
+</div>
+
+<div class="search-wrap">
+  <div class="city-search">
+    <input type="text" id="cityInput" placeholder="Search city... e.g. Lucknow, Jaipur, Pune" onkeydown="if(event.key==='Enter')fetchWeather()">
+    <select id="stateSel">
+      <option value="">All States</option>
+      <option>Uttar Pradesh</option><option>Punjab</option><option>Haryana</option>
+      <option>Rajasthan</option><option>Maharashtra</option><option>Kerala</option>
+      <option>MP</option><option>Bihar</option><option>Gujarat</option>
+    </select>
+    <button onclick="fetchWeather()">🌤 Get Weather</button>
+  </div>
+</div>
+
+<div class="city-pills">
+  <span class="city-pill" onclick="loadCity('Lucknow')">Lucknow</span>
+  <span class="city-pill" onclick="loadCity('Delhi')">Delhi</span>
+  <span class="city-pill" onclick="loadCity('Jaipur')">Jaipur</span>
+  <span class="city-pill" onclick="loadCity('Mumbai')">Mumbai</span>
+  <span class="city-pill" onclick="loadCity('Chandigarh')">Chandigarh</span>
+  <span class="city-pill" onclick="loadCity('Bhopal')">Bhopal</span>
+  <span class="city-pill" onclick="loadCity('Patna')">Patna</span>
+  <span class="city-pill" onclick="loadCity('Thiruvananthapuram')">Thiruvananthapuram</span>
+</div>
+
+<div class="main">
+
+  <!-- CURRENT WEATHER -->
+  <div class="weather-now" id="weatherNow">
+    <div>
+      <div class="weather-city" id="wCity">Select a City</div>
+      <div class="weather-date" id="wDate">Click on any city above or search</div>
+      <div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:12px">
+        <div class="weather-temp" id="wTemp">--</div>
+        <div class="weather-unit">°C</div>
+      </div>
+      <div class="weather-cond" id="wCond">--</div>
+    </div>
+    <div style="text-align:center">
+      <div class="weather-emoji" id="wEmoji">🌤</div>
+      <div class="weather-stats">
+        <div class="ws-item"><div class="ws-val" id="wHumidity">--%</div><div class="ws-lbl">Humidity</div></div>
+        <div class="ws-item"><div class="ws-val" id="wWind">-- km/h</div><div class="ws-lbl">Wind</div></div>
+        <div class="ws-item"><div class="ws-val" id="wRain">--%</div><div class="ws-lbl">Rain Chance</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RAIN PREDICTION -->
+  <div class="rain-predict" id="rainPredict" style="display:none">
+    <div class="rain-main">
+      <div class="rain-big-icon" id="rIcon">🌧️</div>
+      <div class="rain-info">
+        <h3 id="rTitle">Rain Prediction</h3>
+        <p id="rDesc">Rain prediction will appear here</p>
+      </div>
+    </div>
+    <div style="text-align:center">
+      <div class="rain-chance-big" id="rPct">--%</div>
+      <div class="rain-chance-lbl">Rain Probability</div>
+    </div>
+  </div>
+
+  <!-- 7-DAY FORECAST -->
+  <div class="card" style="animation-delay:.1s">
+    <div class="card-title">📅 7-Day Forecast</div>
+    <div class="card-sub" id="forecastSub">Select a city to view 7-day weather forecast</div>
+    <div class="forecast-strip" id="forecastStrip">
+      <div style="grid-column:1/-1;text-align:center;color:var(--muted);font-style:italic;padding:24px">Search or click a city to load forecast</div>
+    </div>
+  </div>
+
+  <!-- WEATHER DETAILS -->
+  <div class="card" style="animation-delay:.2s">
+    <div class="card-title">🌡️ Detailed Weather Metrics</div>
+    <div class="card-sub">Key parameters affecting crop irrigation decisions</div>
+    <div class="detail-grid" id="detailGrid">
+      <div class="detail-card"><div class="detail-icon">🌡️</div><div class="detail-val" id="d1">--°C</div><div class="detail-lbl">Feels Like</div></div>
+      <div class="detail-card"><div class="detail-icon">💧</div><div class="detail-val" id="d2">--%</div><div class="detail-lbl">Humidity</div></div>
+      <div class="detail-card"><div class="detail-icon">💨</div><div class="detail-val" id="d3">-- km/h</div><div class="detail-lbl">Wind Speed</div></div>
+      <div class="detail-card"><div class="detail-icon">☁️</div><div class="detail-val" id="d4">--%</div><div class="detail-lbl">Cloud Cover</div></div>
+    </div>
+  </div>
+
+  <!-- AGRI ALERTS -->
+  <div class="card" style="animation-delay:.3s">
+    <div class="card-title">🌾 Agricultural Weather Alerts</div>
+    <div class="card-sub">Smart irrigation advice based on current weather conditions</div>
+    <div id="alertsBox">
+      <div class="agri-alert info">ℹ️ Select a city to get weather-based irrigation recommendations for your crops.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const cityDB = {
+  'Lucknow':    {temp:34,feels:37,humidity:65,wind:14,cloud:40,rain:35,cond:'Partly Cloudy',emoji:'⛅'},
+  'Delhi':      {temp:38,feels:42,humidity:45,wind:18,cloud:25,rain:15,cond:'Mostly Sunny',emoji:'☀️'},
+  'Jaipur':     {temp:40,feels:44,humidity:30,wind:20,cloud:15,rain:8,cond:'Hot & Dry',emoji:'☀️'},
+  'Mumbai':     {temp:30,feels:34,humidity:82,wind:22,cloud:75,rain:72,cond:'Mostly Cloudy',emoji:'🌧️'},
+  'Chandigarh': {temp:32,feels:35,humidity:58,wind:12,cloud:30,rain:22,cond:'Partly Cloudy',emoji:'⛅'},
+  'Bhopal':     {temp:33,feels:36,humidity:60,wind:15,cloud:50,rain:42,cond:'Overcast',emoji:'🌤️'},
+  'Patna':      {temp:35,feels:39,humidity:70,wind:10,cloud:55,rain:48,cond:'Humid & Warm',emoji:'🌦️'},
+  'Thiruvananthapuram':{temp:29,feels:33,humidity:88,wind:16,cloud:85,rain:80,cond:'Heavy Rain Likely',emoji:'🌧️'},
+};
+
+function loadCity(city){
+  document.querySelectorAll('.city-pill').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.city-pill').forEach(p=>{if(p.textContent.trim()===city)p.classList.add('active')});
+  document.getElementById('cityInput').value = city;
+  displayWeather(city);
+}
+
+function fetchWeather(){
+  const city = document.getElementById('cityInput').value.trim();
+  if(!city){alert('Please enter a city name');return;}
+  const matched = Object.keys(cityDB).find(c=>c.toLowerCase()===city.toLowerCase());
+  if(matched) displayWeather(matched);
+  else {
+    // Generate mock data for unknown city
+    const mock = {temp:32+Math.floor(Math.random()*8),feels:35+Math.floor(Math.random()*8),
+      humidity:50+Math.floor(Math.random()*30),wind:10+Math.floor(Math.random()*15),
+      cloud:20+Math.floor(Math.random()*60),rain:10+Math.floor(Math.random()*60),
+      cond:'Partly Cloudy',emoji:'⛅'};
+    cityDB[city] = mock;
+    displayWeather(city);
+  }
+}
+
+function displayWeather(city){
+  const d = cityDB[city];
+  const now = new Date();
+
+  // Current weather
+  document.getElementById('wCity').textContent = '📍 '+city;
+  document.getElementById('wDate').textContent = now.toDateString()+' · Current Weather';
+  document.getElementById('wTemp').textContent = d.temp;
+  document.getElementById('wCond').textContent = d.cond;
+  document.getElementById('wEmoji').textContent = d.emoji;
+  document.getElementById('wHumidity').textContent = d.humidity+'%';
+  document.getElementById('wWind').textContent = d.wind+' km/h';
+  document.getElementById('wRain').textContent = d.rain+'%';
+
+  // Details
+  document.getElementById('d1').textContent = d.feels+'°C';
+  document.getElementById('d2').textContent = d.humidity+'%';
+  document.getElementById('d3').textContent = d.wind+' km/h';
+  document.getElementById('d4').textContent = d.cloud+'%';
+
+  // Rain prediction
+  document.getElementById('rainPredict').style.display = 'flex';
+  document.getElementById('rPct').textContent = d.rain+'%';
+  if(d.rain>=65){
+    document.getElementById('rIcon').textContent='🌧️';
+    document.getElementById('rTitle').textContent='Rain Highly Likely Today';
+    document.getElementById('rDesc').textContent=`${d.rain}% chance of rainfall in ${city}. Suspend irrigation schedules. Crop watering is covered naturally — save pump costs today.`;
+  } else if(d.rain>=35){
+    document.getElementById('rIcon').textContent='🌦️';
+    document.getElementById('rTitle').textContent='Possible Rainfall Today';
+    document.getElementById('rDesc').textContent=`${d.rain}% chance of moderate rain. Reduce irrigation by 50%. Monitor field moisture before activating pumps.`;
+  } else {
+    document.getElementById('rIcon').textContent='☀️';
+    document.getElementById('rTitle').textContent='No Rain Expected';
+    document.getElementById('rDesc').textContent=`Only ${d.rain}% rain probability. Run full irrigation schedule as planned. Ensure drip system is active for all zones.`;
+  }
+
+  // 7-day forecast
+  const strip = document.getElementById('forecastStrip');
+  const conditions = [
+    {icon:'☀️',cond:'Sunny',rain:5},{icon:'⛅',cond:'Partly Cloudy',rain:18},
+    {icon:'🌦️',cond:'Light Rain',rain:55},{icon:'🌧️',cond:'Rainy',rain:80},
+    {icon:'⛅',cond:'Cloudy',rain:30},{icon:'☀️',cond:'Clear',rain:8},{icon:'🌤️',cond:'Fair',rain:12}
+  ];
+  strip.innerHTML = conditions.map((c,i)=>{
+    const day = days[(now.getDay()+i)%7];
+    const maxT = d.temp + Math.floor(Math.random()*6-3);
+    const minT = maxT - 6;
+    return `
+      <div class="fc-day ${i===0?'today':''}">
+        <div class="fc-name">${i===0?'Today':day}</div>
+        <span class="fc-icon">${c.icon}</span>
+        <div class="fc-temp-max">${maxT}°C</div>
+        <div class="fc-temp-min">${minT}°C</div>
+        <div class="fc-rain-pct">💧${c.rain}%</div>
+      </div>`;
+  }).join('');
+  document.getElementById('forecastSub').textContent = `7-day weather forecast for ${city}`;
+
+  // Agri alerts
+  const alerts = [];
+  if(d.rain >= 65) alerts.push({type:'info',msg:`🌧️ <strong>Skip Irrigation Today:</strong> High rain expected (${d.rain}%). Pump off. Let natural rainfall water the crops.`});
+  if(d.temp >= 40) alerts.push({type:'warn',msg:`🌡️ <strong>Heat Stress Alert:</strong> Temperature ${d.temp}°C is very high. Increase watering frequency by 40%. Water before 7 AM.`});
+  if(d.humidity >= 80) alerts.push({type:'warn',msg:`💦 <strong>High Humidity Warning:</strong> ${d.humidity}% humidity. Risk of fungal diseases. Avoid evening irrigation. Increase ventilation.`});
+  if(d.wind >= 25) alerts.push({type:'warn',msg:`💨 <strong>High Wind Advisory:</strong> ${d.wind} km/h winds. Avoid sprinkler irrigation — use drip system to prevent water drift.`});
+  if(d.temp<=15) alerts.push({type:'warn',msg:`❄️ <strong>Cold Temperature:</strong> ${d.temp}°C is cold. Frost risk. Protect sensitive crops. Reduce watering to prevent waterlogging.`});
+  if(alerts.length===0) alerts.push({type:'info',msg:`✅ <strong>Conditions Good:</strong> Weather is suitable for normal irrigation. Proceed with scheduled watering plan.`});
+
+  document.getElementById('alertsBox').innerHTML = alerts.map(a=>`
+    <div class="agri-alert ${a.type}">${a.msg}</div>`).join('');
+}
+
+// Load Delhi by default
+loadCity('Delhi');
+</script>
+</body>
+</html>

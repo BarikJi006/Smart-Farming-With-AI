@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroFlow — Soil Detector</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --earth:#1a3a0e;--leaf:#2d6a1f;--sprout:#5a9e2f;--lime:#7ec850;--mist:#c8e6a8;
+  --sky:#eaf5e1;--gold:#c8870a;--amber:#f0a830;--cream:#f7f4ec;--white:#ffffff;
+  --text:#152b0a;--muted:#5a7050;--dark:#0e1f08;
+  --soil-black:#2c1810;--soil-red:#8b3a2a;--soil-sandy:#c4a35a;
+  --soil-grey:#7a8a7a;--soil-alluvial:#4a3728;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden}
+
+/* NAV */
+nav{background:rgba(14,31,8,0.97);padding:0 6%;display:flex;align-items:center;justify-content:space-between;height:64px;border-bottom:1px solid rgba(90,158,47,0.25)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--lime);text-decoration:none;display:flex;align-items:center;gap:8px}
+.nav-logo .drop{color:var(--amber);font-style:italic}
+.nav-badge{background:rgba(90,158,47,.2);border:1px solid rgba(90,158,47,.4);color:var(--lime);padding:4px 14px;border-radius:100px;font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+
+/* HERO */
+.page-hero{background:linear-gradient(135deg,var(--dark) 0%,#1a1005 40%,#2d1a08 70%,var(--earth) 100%);padding:56px 6% 48px;position:relative;overflow:hidden}
+.hero-bg-text{position:absolute;right:-2%;bottom:-10%;font-size:18rem;opacity:.03;font-family:'Playfair Display',serif;font-weight:900;color:#fff;pointer-events:none;line-height:1}
+.tag{display:inline-flex;align-items:center;gap:8px;background:rgba(200,135,10,.15);border:1px solid rgba(200,135,10,.4);color:var(--amber);padding:5px 14px;border-radius:100px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px}
+.pdot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(240,168,48,.7)}50%{box-shadow:0 0 0 8px rgba(240,168,48,0)}}
+.page-hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,4.5vw,3.5rem);font-weight:900;color:#fff;line-height:1.08;margin-bottom:14px}
+.page-hero h1 .gold{color:var(--amber);font-style:italic}
+.page-hero h1 .green{color:var(--lime)}
+.page-hero p{color:rgba(200,230,168,.72);font-size:1rem;line-height:1.75;max-width:580px;font-weight:300}
+
+/* METHOD TOGGLE */
+.method-toggle{display:flex;gap:0;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:14px;overflow:hidden;margin-top:32px;width:fit-content}
+.method-btn{padding:12px 28px;border:none;background:transparent;color:rgba(200,230,168,.6);font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .3s;display:flex;align-items:center;gap:8px}
+.method-btn.active{background:var(--sprout);color:#fff;box-shadow:0 4px 16px rgba(90,158,47,.4)}
+.method-btn:hover:not(.active){background:rgba(255,255,255,.08);color:#fff}
+
+/* MAIN LAYOUT */
+.main{padding:40px 6%;max-width:1340px;margin:0 auto;display:grid;grid-template-columns:420px 1fr;gap:28px;align-items:start}
+
+/* DETECTOR PANEL */
+.detector-panel{position:sticky;top:20px}
+.card{background:var(--white);border-radius:20px;padding:28px;box-shadow:0 4px 28px rgba(26,58,14,.08);border:1px solid rgba(90,158,47,.1);animation:fadeUp .6s ease both;margin-bottom:20px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.card-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--earth);margin-bottom:5px}
+.card-sub{color:var(--muted);font-size:.83rem;margin-bottom:20px;line-height:1.55}
+
+/* ============ METHOD 1: COLOR PICKER ============ */
+#method-color{display:block}
+#method-photo{display:none}
+
+.soil-color-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.color-option{border-radius:14px;overflow:hidden;cursor:pointer;border:2.5px solid transparent;transition:all .3s;position:relative}
+.color-option:hover{transform:translateY(-4px);box-shadow:0 10px 24px rgba(0,0,0,.15)}
+.color-option.selected{border-color:var(--lime);box-shadow:0 0 0 3px rgba(126,200,80,.3)}
+.color-swatch{height:70px;display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+.color-label{background:var(--dark);color:var(--mist);font-size:.7rem;font-weight:700;text-align:center;padding:7px 4px;letter-spacing:.3px}
+.color-option.selected .color-label{background:var(--sprout);color:#fff}
+.selected-tick{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--lime);display:none;align-items:center;justify-content:center;font-size:.7rem;color:#fff;font-weight:900}
+.color-option.selected .selected-tick{display:flex}
+
+/* ADDITIONAL INPUTS */
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.ctrl-group label{display:block;font-size:.78rem;font-weight:700;color:var(--earth);margin-bottom:6px;letter-spacing:.3px}
+.ctrl-group select,.ctrl-group input{width:100%;padding:10px 13px;border:1.5px solid #d4e8c0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text);background:var(--sky);outline:none;transition:all .25s}
+.ctrl-group select:focus,.ctrl-group input:focus{border-color:var(--sprout);background:#fff;box-shadow:0 0 0 3px rgba(90,158,47,.1)}
+.full-width{grid-column:1/-1}
+
+/* DETECT BTN */
+.detect-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),var(--amber));color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:10px}
+.detect-btn:hover{background:linear-gradient(135deg,var(--amber),#f5c842);transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,135,10,.4)}
+.detect-btn.loading{background:linear-gradient(135deg,#888,#aaa);cursor:not-allowed}
+
+/* ============ METHOD 2: PHOTO UPLOAD ============ */
+.upload-zone{border:2.5px dashed rgba(90,158,47,.35);border-radius:16px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .3s;background:rgba(234,245,225,.5);position:relative;overflow:hidden}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--sprout);background:var(--sky)}
+.upload-icon{font-size:3rem;margin-bottom:12px;display:block}
+.upload-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--earth);margin-bottom:6px}
+.upload-sub{font-size:.82rem;color:var(--muted);line-height:1.5}
+#photoInput{position:absolute;inset:0;opacity:0;cursor:pointer}
+.preview-img{width:100%;border-radius:12px;max-height:200px;object-fit:cover;display:none;margin-bottom:12px}
+.ai-scanning{display:none;text-align:center;padding:20px}
+.scan-spinner{width:48px;height:48px;border:4px solid rgba(90,158,47,.15);border-top-color:var(--sprout);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scan-text{font-size:.88rem;color:var(--muted);font-weight:500}
+.scan-steps{margin-top:8px;font-size:.78rem;color:var(--sprout)}
+
+/* ============ RESULT SECTION ============ */
+.result-section{display:none}
+.result-section.show{display:block;animation:fadeUp .5s ease}
+
+/* SOIL TYPE HERO CARD */
+.soil-hero{border-radius:20px;padding:28px;margin-bottom:20px;position:relative;overflow:hidden;color:#fff}
+.soil-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,.5),rgba(0,0,0,.2))}
+.soil-hero-content{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px}
+.soil-name-big{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;margin-bottom:6px;line-height:1.1}
+.soil-found-in{font-size:.82rem;opacity:.8;margin-bottom:12px}
+.soil-props{display:flex;flex-wrap:wrap;gap:8px}
+.soil-prop-chip{background:rgba(255,255,255,.18);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.25);padding:4px 12px;border-radius:100px;font-size:.75rem;font-weight:600}
+.soil-score-wrap{text-align:center;flex-shrink:0}
+.score-ring{width:90px;height:90px;position:relative}
+.score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.score-ring svg circle:first-child{fill:none;stroke:rgba(255,255,255,.2);stroke-width:8}
+.score-ring svg circle.arc{fill:none;stroke:#fff;stroke-width:8;stroke-linecap:round;stroke-dasharray:226;transition:stroke-dashoffset 1.5s cubic-bezier(.22,1,.36,1)}
+.score-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:#fff}
+.score-lbl{font-size:.6rem;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.5px}
+
+/* CROP GRID */
+.crops-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.crop-card{background:var(--sky);border-radius:12px;padding:14px 10px;text-align:center;border:1.5px solid transparent;transition:all .25s;cursor:default}
+.crop-card:hover{border-color:var(--sprout);transform:translateY(-3px);box-shadow:0 8px 20px rgba(90,158,47,.12)}
+.crop-em{font-size:2rem;display:block;margin-bottom:6px}
+.crop-nm{font-size:.8rem;font-weight:700;color:var(--earth);display:block;margin-bottom:2px}
+.crop-season{font-size:.68rem;color:var(--muted)}
+.crop-water{font-size:.7rem;font-weight:700;color:var(--sprout);margin-top:4px;display:block}
+
+/* WATER NEED */
+.water-requirement{background:linear-gradient(135deg,rgba(26,107,181,.08),rgba(126,200,255,.05));border:1.5px solid rgba(78,162,255,.2);border-radius:16px;padding:20px;margin-bottom:20px}
+.wr-title{font-size:.8rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1a6bb5;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.wr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.wr-box{background:rgba(255,255,255,.7);border-radius:12px;padding:14px;text-align:center}
+.wr-val{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;color:var(--earth)}
+.wr-lbl{font-size:.7rem;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.3px}
+.wr-bar-section{margin-top:16px}
+.wr-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.wr-bar-label{font-size:.78rem;font-weight:600;color:var(--earth);width:90px;flex-shrink:0}
+.wr-bar-track{flex:1;height:8px;background:rgba(78,162,255,.1);border-radius:4px;overflow:hidden}
+.wr-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#4aa2ff,#7ec8ff);transition:width 1.3s cubic-bezier(.22,1,.36,1)}
+.wr-bar-val{font-size:.75rem;font-weight:700;color:#1a6bb5;width:55px;text-align:right;flex-shrink:0}
+
+/* HEALTH SCORE BREAKDOWN */
+.health-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+.health-item{background:var(--sky);border-radius:12px;padding:14px 16px}
+.hi-label{font-size:.72rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.hi-bar{height:6px;background:rgba(90,158,47,.12);border-radius:3px;overflow:hidden;margin-bottom:6px}
+.hi-fill{height:100%;border-radius:3px;transition:width 1.2s ease}
+.hi-val{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--earth)}
+.hi-tag{font-size:.72rem;margin-left:4px}
+
+/* NEARBY FARMERS */
+.farmers-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.farmer-row{display:flex;align-items:center;gap:14px;background:var(--sky);border-radius:12px;padding:14px 16px;border-left:3px solid var(--sprout);transition:all .25s}
+.farmer-row:hover{transform:translateX(4px);box-shadow:4px 4px 14px rgba(26,58,14,.08)}
+.farmer-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--sprout),var(--earth));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.1rem;flex-shrink:0}
+.farmer-info{flex:1}
+.farmer-name{font-weight:700;font-size:.9rem;color:var(--earth);margin-bottom:2px}
+.farmer-detail{font-size:.78rem;color:var(--muted);line-height:1.4}
+.farmer-soil-badge{font-size:.7rem;font-weight:700;color:var(--sprout);background:rgba(90,158,47,.1);padding:2px 8px;border-radius:100px;flex-shrink:0}
+.farmer-dist{font-size:.72rem;color:var(--muted);text-align:right;flex-shrink:0}
+
+/* TIPS */
+.tip-box{background:linear-gradient(135deg,rgba(200,135,10,.07),rgba(240,168,48,.04));border:1.5px solid rgba(200,135,10,.25);border-radius:14px;padding:16px 18px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
+.tip-icon{font-size:1.2rem;flex-shrink:0}
+.tip-text{font-size:.84rem;color:var(--text);line-height:1.55}
+.tip-text strong{color:var(--gold);display:block;margin-bottom:2px}
+
+/* CONFIDENCE BADGE */
+.confidence-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(90,158,47,.12);border:1px solid rgba(90,158,47,.25);padding:4px 12px;border-radius:100px;font-size:.75rem;font-weight:700;color:var(--leaf);margin-bottom:16px}
+
+@media(max-width:1000px){.main{grid-template-columns:1fr}.detector-panel{position:static}}
+@media(max-width:600px){.crops-grid{grid-template-columns:repeat(2,1fr)}.wr-grid{grid-template-columns:1fr 1fr}.health-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">Agro<span class="drop">Flow</span> 💧</a>
+  <span class="nav-badge">🔬 Feature 07</span>
+</nav>
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="hero-bg-text">SOIL</div>
+  <div class="tag"><div class="pdot"></div>Soil Intelligence Module</div>
+  <h1>Smart <span class="gold">Soil</span><br><span class="green">Detector</span></h1>
+  <p>Kisi bhi kisan ko ab soil expert ki zaroorat nahi — apni mitti ki photo lo ya rang dekho, aur jaano ki aapki zameen kaisi hai, kya ugega, aur kitna paani chahiye.</p>
+
+  <div class="method-toggle">
+    <button class="method-btn active" id="btnColor" onclick="switchMethod('color')">🎨 Rang/Dikhaavat Se</button>
+    <button class="method-btn" id="btnPhoto" onclick="switchMethod('photo')">📸 Photo Upload Se</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ===== LEFT: DETECTOR PANEL ===== -->
+  <div class="detector-panel">
+
+    <!-- METHOD 1: COLOR -->
+    <div id="method-color">
+      <div class="card">
+        <div class="card-title">🎨 Soil Ka Rang Chuniye</div>
+        <div class="card-sub">Apni mitti ka rang dekh ke neeche se ek option select karo — aur hum bata denge soil kaisi hai.</div>
+
+        <div class="soil-color-grid">
+          <div class="color-option" onclick="selectColor(this,'black')" data-type="black">
+            <div class="selected-tick">✓</div>
+            <div class="color-swatch" style="background:linear-gradient(135deg,#1a0f0a,#2c1810)">🌑</div>
+            <div class="color-label">Kaali Mitti</div>
+          </div>
+          <div class="color-option" onclick="selectColor(this,'red')" data-type="red">
+            <div class="selected-tick">✓</div>
+            <div class="color-swatch" style="background:linear-gradient(135deg,#6b2015,#8b3a2a)">🟥</div>
+            <div class="color-label">Laal Mitti</div>
+          </div>
+          <div class="color-option" onclick="selectColor(this,'sandy')" data-type="sandy">
+            <div class="selected-tick">✓</div>
+            <div class="color-swatch" style="background:linear-gradient(135deg,#b8943a,#c4a35a)">🟨</div>
+            <div class="color-label">Baalui Mitti</div>
+          </div>
+          <div class="color-option" onclick="selectColor(this,'grey')" data-type="grey">
+            <div class="selected-tick">✓</div>
+            <div class="color-swatch" style="background:linear-gradient(135deg,#5a6a5a,#7a8a7a)">⬜</div>
+            <div class="color-label">Grey Mitti</div>
+          </div>
+          <div class="color-option" onclick="selectColor(this,'alluvial')" data-type="alluvial">
+            <div class="selected-tick">✓</div>
+            <div class="color-swatch" style="background:linear-gradient(135deg,#3a2818,#4a3728)">🟫</div>
+            <div class="color-label">Domat Mitti</div>
+          </div>
+          <div class="color-option" onclick="selectColor(this,'laterite')" data-type="laterite">
+            <div class="selected-tick">✓</div>
+            <div class="color-swatch" style="background:linear-gradient(135deg,#7a3520,#9b4530)">🔶</div>
+            <div class="color-label">Laterite</div>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <div class="ctrl-group">
+            <label>Rajya / State</label>
+            <select id="stateSel">
+              <option value="">Select karo</option>
+              <option>Uttar Pradesh</option><option>Punjab</option><option>Haryana</option>
+              <option>Madhya Pradesh</option><option>Rajasthan</option><option>Maharashtra</option>
+              <option>Bihar</option><option>Kerala</option><option>Tamil Nadu</option><option>Gujarat</option>
+            </select>
+          </div>
+          <div class="ctrl-group">
+            <label>Zameen (Acres)</label>
+            <input type="number" id="acreInput" placeholder="e.g. 2.5" min="0.5" step="0.5">
+          </div>
+          <div class="ctrl-group full-width">
+            <label>Mitti Ki Badbu / Texture Kaisi Hai?</label>
+            <select id="textureSel">
+              <option value="">Select karo</option>
+              <option value="sticky">Chipchipa / Geeli lagti hai</option>
+              <option value="grainy">Daanedaar / Reti jaisi</option>
+              <option value="smooth">Mulayam / Chikni</option>
+              <option value="crumbly">Tuti-phuti / Sookhi</option>
+              <option value="earthy">Mitti ki khushbu achhi hai</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="detect-btn" id="detectColorBtn" onclick="detectByColor()">
+          <span>🔬</span> Soil Detect Karo
+        </button>
+      </div>
+    </div>
+
+    <!-- METHOD 2: PHOTO -->
+    <div id="method-photo">
+      <div class="card">
+        <div class="card-title">📸 Mitti Ki Photo Upload Karo</div>
+        <div class="card-sub">Seedha kheti ki zameen se mitti uthao, saaf jagah rakh ke photo lo aur upload karo — AI identify karega.</div>
+
+        <img id="previewImg" class="preview-img" src="" alt="Preview">
+        <div class="ai-scanning" id="aiScanning">
+          <div class="scan-spinner"></div>
+          <div class="scan-text">🤖 AI Soil Analysis Ho Rahi Hai...</div>
+          <div class="scan-steps" id="scanSteps">Tasveer process ho rahi hai</div>
+        </div>
+
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)">
+          <span class="upload-icon">📷</span>
+          <div class="upload-title">Photo Yahan Drop Karo</div>
+          <div class="upload-sub">Ya click karke apne phone se photo lo<br><span style="color:var(--sprout);font-weight:600">JPG, PNG — max 10MB</span></div>
+        </div>
+
+        <div class="input-row" style="margin-top:16px">
+          <div class="ctrl-group">
+            <label>Rajya / State</label>
+            <select id="stateSel2">
+              <option value="">Select karo</option>
+              <option>Uttar Pradesh</option><option>Punjab</option><option>Haryana</option>
+              <option>Madhya Pradesh</option><option>Rajasthan</option><option>Maharashtra</option>
+              <option>Bihar</option><option>Kerala</option><option>Tamil Nadu</option><option>Gujarat</option>
+            </select>
+          </div>
+          <div class="ctrl-group">
+            <label>Zameen (Acres)</label>
+            <input type="number" id="acreInput2" placeholder="e.g. 2.5" step="0.5">
+          </div>
+        </div>
+
+        <button class="detect-btn" id="detectPhotoBtn" onclick="detectByPhoto()" style="background:linear-gradient(135deg,#1a4a8a,#2d6ab5)">
+          <span>🤖</span> AI Se Identify Karo
+        </button>
+      </div>
+
+      <!-- PHOTO TIPS -->
+      <div class="card">
+        <div class="card-title">📌 Achha Result Ke Liye</div>
+        <div class="tip-box"><div class="tip-icon">☀️</div><div class="tip-text"><strong>Natural Roshni Mein Photo Lo</strong>Dhoop mein ya khidki ke paas mitti rakh ke photo lo.</div></div>
+        <div class="tip-box"><div class="tip-icon">🤏</div><div class="tip-text"><strong>Geeli Ya Sookhi — Dono Theek Hai</strong>Mitti ki prakritik avastha mein hi photo lo.</div></div>
+        <div class="tip-box"><div class="tip-icon">📐</div><div class="tip-text"><strong>Seedha Upar Se Photo Lo</strong>Mitti ko safed kagaz ya plate mein rakho — zyada saaf result milega.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== RIGHT: RESULTS ===== -->
+  <div>
+    <!-- EMPTY STATE -->
+    <div id="emptyState" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;text-align:center;padding:40px">
+      <div style="font-size:5rem;margin-bottom:20px;opacity:.4">🌍</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--earth);margin-bottom:10px">Apni Mitti Ke Baare Mein Jaano</div>
+      <div style="font-size:.95rem;color:var(--muted);line-height:1.7;max-width:400px">Baye taraf se soil ka rang chuniye ya photo upload karo — hum batayenge aapki mitti kaisi hai, kya ugega, aur kitna paani chahiye.</div>
+      <div style="margin-top:28px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+        <div style="background:var(--sky);border-radius:12px;padding:14px 18px;text-align:center;min-width:110px">
+          <div style="font-size:1.8rem;margin-bottom:6px">🌱</div>
+          <div style="font-size:.8rem;font-weight:700;color:var(--earth)">Crop Suggest</div>
+        </div>
+        <div style="background:var(--sky);border-radius:12px;padding:14px 18px;text-align:center;min-width:110px">
+          <div style="font-size:1.8rem;margin-bottom:6px">💧</div>
+          <div style="font-size:.8rem;font-weight:700;color:var(--earth)">Water Need</div>
+        </div>
+        <div style="background:var(--sky);border-radius:12px;padding:14px 18px;text-align:center;min-width:110px">
+          <div style="font-size:1.8rem;margin-bottom:6px">💯</div>
+          <div style="font-size:.8rem;font-weight:700;color:var(--earth)">Health Score</div>
+        </div>
+        <div style="background:var(--sky);border-radius:12px;padding:14px 18px;text-align:center;min-width:110px">
+          <div style="font-size:1.8rem;margin-bottom:6px">👨‍🌾</div>
+          <div style="font-size:.8rem;font-weight:700;color:var(--earth)">Nearby Farmers</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULT SECTION -->
+    <div class="result-section" id="resultSection">
+
+      <!-- CONFIDENCE -->
+      <div class="confidence-badge" id="confidenceBadge">🤖 AI Confidence: 94%</div>
+
+      <!-- SOIL HERO CARD -->
+      <div class="soil-hero" id="soilHero">
+        <div class="soil-hero-content">
+          <div>
+            <div style="font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:.7;margin-bottom:8px">Mitti Ka Prakar</div>
+            <div class="soil-name-big" id="soilNameBig">—</div>
+            <div class="soil-found-in" id="soilFoundIn">—</div>
+            <div class="soil-props" id="soilProps"></div>
+          </div>
+          <div class="soil-score-wrap">
+            <div class="score-ring">
+              <svg viewBox="0 0 90 90">
+                <circle cx="45" cy="45" r="36"/>
+                <circle class="arc" id="scoreArc" cx="45" cy="45" r="36" stroke-dashoffset="226"/>
+              </svg>
+              <div class="score-center">
+                <div class="score-num" id="scoreNum">—</div>
+                <div class="score-lbl">Score</div>
+              </div>
+            </div>
+            <div style="font-size:.72rem;opacity:.7;margin-top:6px;letter-spacing:.5px">HEALTH</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CROPS -->
+      <div class="card" style="animation-delay:.1s">
+        <div class="card-title">🌾 Yeh Crop Ugao Is Mitti Mein</div>
+        <div class="card-sub" id="cropSub">Is mitti ke liye best suited fasal</div>
+        <div class="crops-grid" id="cropsGrid"></div>
+      </div>
+
+      <!-- WATER REQUIREMENT -->
+      <div class="water-requirement" id="waterRequirement">
+        <div class="wr-title">💧 Paani Ki Zaroorat</div>
+        <div class="wr-grid">
+          <div class="wr-box"><div class="wr-val" id="wr1">—</div><div class="wr-lbl">Litre/Sqm/Day</div></div>
+          <div class="wr-box"><div class="wr-val" id="wr2">—</div><div class="wr-lbl">Litres/Acre/Day</div></div>
+          <div class="wr-box"><div class="wr-val" id="wr3">—</div><div class="wr-lbl">Season Total (KL)</div></div>
+        </div>
+        <div class="wr-bar-section" id="wrBars"></div>
+      </div>
+
+      <!-- HEALTH BREAKDOWN -->
+      <div class="card" style="animation-delay:.2s">
+        <div class="card-title">💯 Mitti Ka Health Score</div>
+        <div class="card-sub">Is soil ka detailed health analysis</div>
+        <div class="health-grid" id="healthGrid"></div>
+      </div>
+
+      <!-- NEARBY FARMERS -->
+      <div class="card" style="animation-delay:.3s">
+        <div class="card-title">👨‍🌾 Aas-Paas Ke Kisan</div>
+        <div class="card-sub" id="farmerSub">Aapke region mein isi mitti pe kaam karne wale kisan</div>
+        <div class="farmers-list" id="farmersList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ SOIL DATA ============
+const soilDB = {
+  black: {
+    name: 'Kaali Mitti (Black Cotton Soil)',
+    englishName: 'Black Cotton Soil / Regur',
+    foundIn: '📍 Maharashtra, MP, Gujarat, Telangana, AP',
+    color: 'linear-gradient(135deg,#1a0f0a,#2c1810,#3a2015)',
+    props: ['Chipchipa','High Clay','Moisture Retain Karta Hai','pH 7.5–8.5'],
+    score: 78,
+    health: [
+      {label:'Fertility',pct:82,val:'82/100',color:'#5a9e2f',tag:'Achha'},
+      {label:'Moisture Hold',pct:90,val:'90/100',color:'#4aa2ff',tag:'Bahut Badhiya'},
+      {label:'Drainage',pct:35,val:'35/100',color:'#f0a830',tag:'Kharab'},
+      {label:'Organic Matter',pct:55,val:'55/100',color:'#c8870a',tag:'Theek'},
+    ],
+    crops: [
+      {em:'🌿',name:'Cotton',season:'Kharif',water:'3.2L/sqm'},
+      {em:'🌻',name:'Sunflower',season:'Rabi',water:'2.4L/sqm'},
+      {em:'🫘',name:'Soybean',season:'Kharif',water:'2.9L/sqm'},
+      {em:'🌾',name:'Wheat',season:'Rabi',water:'2.8L/sqm'},
+      {em:'🧅',name:'Onion',season:'Rabi',water:'2.1L/sqm'},
+      {em:'🍋',name:'Citrus',season:'Perennial',water:'3.5L/sqm'},
+    ],
+    waterPerSqm: 3.2,
+    waterBars: [
+      {label:'Cotton',pct:64,val:'3.2 L/sqm'},
+      {label:'Wheat',pct:56,val:'2.8 L/sqm'},
+      {label:'Soybean',pct:58,val:'2.9 L/sqm'},
+    ],
+    tips: ['Baari irrigation se bachein — waterlogging hoti hai','Cotton ke liye ideal soil hai','Drainage improve karne ke liye sand mix karein'],
+    confidence: 91,
+    nearbyFarmers: [
+      {name:'Ramesh Patel',area:'Nagpur, MH',crops:'Cotton, Wheat',dist:'4.2 km',soil:'Kaali'},
+      {name:'Suresh Jadhav',area:'Yavatmal, MH',crops:'Soybean, Cotton',dist:'7.8 km',soil:'Kaali'},
+      {name:'Bharat Yadav',area:'Nanded, MH',crops:'Onion, Wheat',dist:'12 km',soil:'Kaali'},
+    ]
+  },
+  red: {
+    name: 'Laal Mitti (Red Soil)',
+    englishName: 'Red Laterite Soil',
+    foundIn: '📍 Tamil Nadu, Karnataka, Andhra, Jharkhand, Odisha',
+    color: 'linear-gradient(135deg,#5a1a0a,#8b2a1a,#a03520)',
+    props: ['Iron Bharpoor','Porous','Jaldi Dry Hoti Hai','pH 6.0–7.0'],
+    score: 62,
+    health: [
+      {label:'Fertility',pct:52,val:'52/100',color:'#f0a830',tag:'Madhyam'},
+      {label:'Moisture Hold',pct:38,val:'38/100',color:'#e74c3c',tag:'Kharab'},
+      {label:'Drainage',pct:88,val:'88/100',color:'#5a9e2f',tag:'Bahut Badhiya'},
+      {label:'Organic Matter',pct:40,val:'40/100',color:'#f0a830',tag:'Kam'},
+    ],
+    crops: [
+      {em:'🥜',name:'Groundnut',season:'Kharif',water:'2.6L/sqm'},
+      {em:'🌴',name:'Cashew',season:'Perennial',water:'2.0L/sqm'},
+      {em:'🍵',name:'Tea',season:'Perennial',water:'3.8L/sqm'},
+      {em:'🫘',name:'Pulses',season:'Rabi',water:'1.8L/sqm'},
+      {em:'🌿',name:'Millets',season:'Kharif',water:'1.5L/sqm'},
+      {em:'🍌',name:'Banana',season:'Perennial',water:'3.5L/sqm'},
+    ],
+    waterPerSqm: 2.6,
+    waterBars: [
+      {label:'Groundnut',pct:52,val:'2.6 L/sqm'},
+      {label:'Millets',pct:30,val:'1.5 L/sqm'},
+      {label:'Pulses',pct:36,val:'1.8 L/sqm'},
+    ],
+    tips: ['Zyada baar irrigation karo — mitti jaldi dry hoti hai','Organic khad dalo fertility badhane ke liye','Mulching se moisture rokein'],
+    confidence: 88,
+    nearbyFarmers: [
+      {name:'Murugan K.',area:'Coimbatore, TN',crops:'Groundnut, Pulses',dist:'5.1 km',soil:'Laal'},
+      {name:'Venkat Rao',area:'Vizag, AP',crops:'Cashew, Millets',dist:'9.4 km',soil:'Laal'},
+      {name:'Raju Swamy',area:'Shimoga, KA',crops:'Tea, Banana',dist:'14 km',soil:'Laal'},
+    ]
+  },
+  sandy: {
+    name: 'Baalui Mitti (Sandy Soil)',
+    englishName: 'Sandy / Desert Soil',
+    foundIn: '📍 Rajasthan, Gujarat, Haryana, Punjab (reti wale ilaake)',
+    color: 'linear-gradient(135deg,#a07820,#c4a35a,#d4b870)',
+    props: ['Daanedaar','Jaldi Drain','Low Nutrient','pH 6.5–8.0'],
+    score: 48,
+    health: [
+      {label:'Fertility',pct:30,val:'30/100',color:'#e74c3c',tag:'Bahut Kam'},
+      {label:'Moisture Hold',pct:20,val:'20/100',color:'#e74c3c',tag:'Bahut Kharab'},
+      {label:'Drainage',pct:95,val:'95/100',color:'#5a9e2f',tag:'Excellent'},
+      {label:'Organic Matter',pct:18,val:'18/100',color:'#e74c3c',tag:'Bahut Kam'},
+    ],
+    crops: [
+      {em:'🌵',name:'Bajra',season:'Kharif',water:'1.5L/sqm'},
+      {em:'🧄',name:'Garlic',season:'Rabi',water:'1.4L/sqm'},
+      {em:'🍉',name:'Watermelon',season:'Summer',water:'2.5L/sqm'},
+      {em:'🌿',name:'Cumin',season:'Rabi',water:'1.0L/sqm'},
+      {em:'🥕',name:'Carrot',season:'Rabi',water:'2.0L/sqm'},
+      {em:'🫑',name:'Cluster Bean',season:'Kharif',water:'1.2L/sqm'},
+    ],
+    waterPerSqm: 1.8,
+    waterBars: [
+      {label:'Bajra',pct:30,val:'1.5 L/sqm'},
+      {label:'Watermelon',pct:50,val:'2.5 L/sqm'},
+      {label:'Cumin',pct:20,val:'1.0 L/sqm'},
+    ],
+    tips: ['Drip irrigation use karo — paani jaldi drain hota hai','Compost ya gobar khad dalo','Windbreaker lagao — hawa se mitti ud jaati hai'],
+    confidence: 85,
+    nearbyFarmers: [
+      {name:'Mangilal Sharma',area:'Jodhpur, RJ',crops:'Bajra, Cumin',dist:'3.8 km',soil:'Baalui'},
+      {name:'Prem Chand',area:'Bikaner, RJ',crops:'Garlic, Watermelon',dist:'11 km',soil:'Baalui'},
+      {name:'Hari Singh',area:'Barmer, RJ',crops:'Cluster Bean',dist:'18 km',soil:'Baalui'},
+    ]
+  },
+  grey: {
+    name: 'Grey Mitti (Clay Soil)',
+    englishName: 'Grey Clayey / Heavy Soil',
+    foundIn: '📍 West Bengal, Bihar, UP (tarai), Assam, Odisha',
+    color: 'linear-gradient(135deg,#3a4a3a,#5a6a5a,#6a7a6a)',
+    props: ['Bhaari','Water Rokti Hai','Waterlogging Risk','pH 6.5–7.5'],
+    score: 70,
+    health: [
+      {label:'Fertility',pct:75,val:'75/100',color:'#5a9e2f',tag:'Achha'},
+      {label:'Moisture Hold',pct:95,val:'95/100',color:'#4aa2ff',tag:'Excellent'},
+      {label:'Drainage',pct:22,val:'22/100',color:'#e74c3c',tag:'Bahut Kharab'},
+      {label:'Organic Matter',pct:65,val:'65/100',color:'#5a9e2f',tag:'Achha'},
+    ],
+    crops: [
+      {em:'🌾',name:'Rice/Paddy',season:'Kharif',water:'5.2L/sqm'},
+      {em:'🎋',name:'Jute',season:'Kharif',water:'3.8L/sqm'},
+      {em:'🌿',name:'Sugarcane',season:'Annual',water:'4.8L/sqm'},
+      {em:'🌻',name:'Mustard',season:'Rabi',water:'2.0L/sqm'},
+      {em:'🧅',name:'Potato',season:'Rabi',water:'2.2L/sqm'},
+      {em:'🥦',name:'Vegetables',season:'All',water:'3.0L/sqm'},
+    ],
+    waterPerSqm: 4.5,
+    waterBars: [
+      {label:'Rice',pct:95,val:'5.2 L/sqm'},
+      {label:'Sugarcane',pct:88,val:'4.8 L/sqm'},
+      {label:'Mustard',pct:40,val:'2.0 L/sqm'},
+    ],
+    tips: ['Raised beds banao drainage ke liye','Paddy ke liye ideal hai','Zyada paani mat do — waterlogging hoti hai'],
+    confidence: 89,
+    nearbyFarmers: [
+      {name:'Mohan Das',area:'Muzaffarpur, BR',crops:'Rice, Jute',dist:'2.5 km',soil:'Grey'},
+      {name:'Sunil Kumar',area:'Patna, BR',crops:'Potato, Vegetables',dist:'6.7 km',soil:'Grey'},
+      {name:'Raju Mondal',area:'Hooghly, WB',crops:'Sugarcane, Rice',dist:'8.2 km',soil:'Grey'},
+    ]
+  },
+  alluvial: {
+    name: 'Domat Mitti (Alluvial Soil)',
+    englishName: 'Alluvial / Doab Soil',
+    foundIn: '📍 UP, Punjab, Haryana, Bihar, Bengal (Ganga-Yamuna doab)',
+    color: 'linear-gradient(135deg,#2a1a0e,#4a3728,#5a4535)',
+    props: ['Bahut Upjaau','Mixed Texture','Best Soil India Mein','pH 7.0–8.0'],
+    score: 92,
+    health: [
+      {label:'Fertility',pct:94,val:'94/100',color:'#5a9e2f',tag:'Excellent'},
+      {label:'Moisture Hold',pct:75,val:'75/100',color:'#4aa2ff',tag:'Achha'},
+      {label:'Drainage',pct:68,val:'68/100',color:'#5a9e2f',tag:'Achha'},
+      {label:'Organic Matter',pct:80,val:'80/100',color:'#5a9e2f',tag:'Bahut Achha'},
+    ],
+    crops: [
+      {em:'🌾',name:'Wheat',season:'Rabi',water:'2.8L/sqm'},
+      {em:'🌾',name:'Rice',season:'Kharif',water:'5.2L/sqm'},
+      {em:'🎋',name:'Sugarcane',season:'Annual',water:'4.8L/sqm'},
+      {em:'🥔',name:'Potato',season:'Rabi',water:'2.2L/sqm'},
+      {em:'🌽',name:'Maize',season:'Kharif',water:'2.5L/sqm'},
+      {em:'🧅',name:'Vegetables',season:'All',water:'3.0L/sqm'},
+    ],
+    waterPerSqm: 3.5,
+    waterBars: [
+      {label:'Wheat',pct:56,val:'2.8 L/sqm'},
+      {label:'Rice',pct:100,val:'5.2 L/sqm'},
+      {label:'Maize',pct:50,val:'2.5 L/sqm'},
+    ],
+    tips: ['India ki sabse upjaau mitti','Lagbhag sab fasal ugai ja sakti hai','Minimum fertilizer mein bhi achha yield milta hai'],
+    confidence: 96,
+    nearbyFarmers: [
+      {name:'Rajendra Singh',area:'Lucknow, UP',crops:'Wheat, Rice',dist:'1.8 km',soil:'Domat'},
+      {name:'Gurpreet Sandhu',area:'Ludhiana, PB',crops:'Wheat, Sugarcane',dist:'5.2 km',soil:'Domat'},
+      {name:'Mahesh Yadav',area:'Patna, BR',crops:'Maize, Potato',dist:'9.1 km',soil:'Domat'},
+    ]
+  },
+  laterite: {
+    name: 'Laterite Mitti',
+    englishName: 'Laterite Soil',
+    foundIn: '📍 Kerala, Karnataka, Tamil Nadu, Assam',
+    color: 'linear-gradient(135deg,#6a2510,#9b3520,#b04030)',
+    props: ['Laal-Orange','Zyada Acidic','Kam Fertile','pH 5.5–6.5'],
+    score: 55,
+    health: [
+      {label:'Fertility',pct:42,val:'42/100',color:'#f0a830',tag:'Kam'},
+      {label:'Moisture Hold',pct:50,val:'50/100',color:'#f0a830',tag:'Theek'},
+      {label:'Drainage',pct:78,val:'78/100',color:'#5a9e2f',tag:'Achha'},
+      {label:'Organic Matter',pct:35,val:'35/100',color:'#e74c3c',tag:'Kam'},
+    ],
+    crops: [
+      {em:'🍵',name:'Tea',season:'Perennial',water:'3.8L/sqm'},
+      {em:'☕',name:'Coffee',season:'Perennial',water:'3.5L/sqm'},
+      {em:'🌴',name:'Coconut',season:'Perennial',water:'3.0L/sqm'},
+      {em:'🍍',name:'Pineapple',season:'Annual',water:'2.8L/sqm'},
+      {em:'🥜',name:'Groundnut',season:'Kharif',water:'2.6L/sqm'},
+      {em:'🌿',name:'Tapioca',season:'Annual',water:'2.2L/sqm'},
+    ],
+    waterPerSqm: 3.0,
+    waterBars: [
+      {label:'Tea',pct:76,val:'3.8 L/sqm'},
+      {label:'Coffee',pct:70,val:'3.5 L/sqm'},
+      {label:'Coconut',pct:60,val:'3.0 L/sqm'},
+    ],
+    tips: ['Lime daalo pH badhane ke liye','Tea aur coffee ke liye best soil','Organic matter zaroor milao'],
+    confidence: 87,
+    nearbyFarmers: [
+      {name:'Krishnan P.',area:'Wayanad, KL',crops:'Tea, Coffee',dist:'3.2 km',soil:'Laterite'},
+      {name:'Rajan Nair',area:'Thrissur, KL',crops:'Coconut, Pineapple',dist:'7.5 km',soil:'Laterite'},
+      {name:'Selvan M.',area:'Nilgiris, TN',crops:'Tea, Groundnut',dist:'10 km',soil:'Laterite'},
+    ]
+  }
+};
+
+// ============ STATE ============
+let selectedColorType = null;
+let photoUploaded = false;
+
+// ============ SWITCH METHOD ============
+function switchMethod(m){
+  document.getElementById('btnColor').classList.toggle('active', m==='color');
+  document.getElementById('btnPhoto').classList.toggle('active', m==='photo');
+  document.getElementById('method-color').style.display = m==='color'?'block':'none';
+  document.getElementById('method-photo').style.display = m==='photo'?'block':'none';
+}
+
+// ============ COLOR SELECT ============
+function selectColor(el, type){
+  document.querySelectorAll('.color-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedColorType = type;
+}
+
+// ============ DETECT BY COLOR ============
+function detectByColor(){
+  if(!selectedColorType){ alert('Pehle mitti ka rang chuniye!'); return; }
+  const acres = parseFloat(document.getElementById('acreInput').value) || 2;
+  showLoading('color', () => showResults(selectedColorType, acres, 'color'));
+}
+
+// ============ PHOTO UPLOAD ============
+function handlePhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  const img = document.getElementById('previewImg');
+  img.src = url;
+  img.style.display = 'block';
+  document.getElementById('uploadZone').style.display = 'none';
+  photoUploaded = true;
+}
+
+// ============ DETECT BY PHOTO ============
+function detectByPhoto(){
+  if(!photoUploaded){ alert('Pehle mitti ki photo upload karo!'); return; }
+  const acres = parseFloat(document.getElementById('acreInput2').value) || 2;
+  // Simulate AI detection — randomly pick a soil type
+  const types = Object.keys(soilDB);
+  const detected = types[Math.floor(Math.random()*types.length)];
+  showLoading('photo', () => showResults(detected, acres, 'photo'));
+}
+
+// ============ LOADING ANIMATION ============
+function showLoading(method, callback){
+  if(method==='photo'){
+    document.getElementById('aiScanning').style.display='block';
+    const steps = ['📷 Tasveer process ho rahi hai...','🔬 Soil particles analyse ho rahe hain...','🌈 Rang aur texture check ho raha hai...','🤖 AI database se match ho raha hai...','✅ Soil type identify ho gaya!'];
+    let i=0;
+    const iv = setInterval(()=>{
+      document.getElementById('scanSteps').textContent = steps[i] || steps[steps.length-1];
+      i++;
+    },600);
+    setTimeout(()=>{
+      clearInterval(iv);
+      document.getElementById('aiScanning').style.display='none';
+      callback();
+    },3200);
+  } else {
+    const btn = document.getElementById('detectColorBtn');
+    btn.classList.add('loading');
+    btn.innerHTML='<span>⏳</span> Analyse Ho Raha Hai...';
+    setTimeout(()=>{
+      btn.classList.remove('loading');
+      btn.innerHTML='<span>🔬</span> Soil Detect Karo';
+      callback();
+    },1400);
+  }
+}
+
+// ============ SHOW RESULTS ============
+function showResults(type, acres, method){
+  const d = soilDB[type];
+  if(!d) return;
+
+  document.getElementById('emptyState').style.display='none';
+  const rs = document.getElementById('resultSection');
+  rs.classList.add('show');
+
+  // Confidence
+  const conf = method==='photo' ? d.confidence : Math.min(99, d.confidence+3);
+  document.getElementById('confidenceBadge').textContent = `🤖 AI Confidence: ${conf}%`;
+
+  // Soil hero
+  document.getElementById('soilHero').style.background = d.color;
+  document.getElementById('soilNameBig').textContent = d.name;
+  document.getElementById('soilFoundIn').innerHTML = d.foundIn + '<br><span style="opacity:.65;font-size:.78rem">'+d.englishName+'</span>';
+  document.getElementById('soilProps').innerHTML = d.props.map(p=>`<span class="soil-prop-chip">${p}</span>`).join('');
+
+  // Score ring
+  const scoreOffset = 226 - (d.score/100)*226;
+  document.getElementById('scoreArc').style.strokeDashoffset = scoreOffset;
+  document.getElementById('scoreNum').textContent = d.score;
+  const scoreColor = d.score>=80?'#7ec850':d.score>=60?'#f0a830':'#e74c3c';
+  document.getElementById('scoreArc').style.stroke = scoreColor;
+
+  // Crops
+  document.getElementById('cropSub').textContent = `${d.name} mein yeh fasal ugai ja sakti hai`;
+  document.getElementById('cropsGrid').innerHTML = d.crops.map(c=>`
+    <div class="crop-card">
+      <span class="crop-em">${c.em}</span>
+      <span class="crop-nm">${c.name}</span>
+      <span class="crop-season">${c.season}</span>
+      <span class="crop-water">💧${c.water}</span>
+    </div>`).join('');
+
+  // Water
+  const sqmPerAcre = 4047;
+  const litresPerDay = Math.round(d.waterPerSqm * sqmPerAcre * acres);
+  const totalKL = Math.round(litresPerDay * 120 / 1000);
+  document.getElementById('wr1').textContent = d.waterPerSqm+'L';
+  document.getElementById('wr2').textContent = (d.waterPerSqm*sqmPerAcre).toFixed(0)+'L';
+  document.getElementById('wr3').textContent = totalKL+'KL';
+  document.getElementById('wrBars').innerHTML = d.waterBars.map(b=>`
+    <div class="wr-bar-row">
+      <div class="wr-bar-label">${b.label}</div>
+      <div class="wr-bar-track"><div class="wr-bar-fill" style="width:0%" data-pct="${b.pct}"></div></div>
+      <div class="wr-bar-val">${b.val}</div>
+    </div>`).join('');
+  setTimeout(()=>document.querySelectorAll('.wr-bar-fill').forEach(el=>el.style.width=el.dataset.pct+'%'),100);
+
+  // Health
+  document.getElementById('healthGrid').innerHTML = d.health.map(h=>`
+    <div class="health-item">
+      <div class="hi-label">${h.label}</div>
+      <div class="hi-bar"><div class="hi-fill" style="width:0%;background:${h.color}" data-pct="${h.pct}%"></div></div>
+      <div class="hi-val">${h.val} <span class="hi-tag" style="color:${h.color}">${h.tag}</span></div>
+    </div>`).join('');
+  setTimeout(()=>document.querySelectorAll('.hi-fill').forEach(el=>el.style.width=el.dataset.pct),100);
+
+  // Farmers
+  const state = document.getElementById('stateSel').value || document.getElementById('stateSel2').value || 'aapke area';
+  document.getElementById('farmerSub').textContent = `${state} mein isi mitti pe kaam karne wale kisan`;
+  document.getElementById('farmersList').innerHTML = d.nearbyFarmers.map(f=>`
+    <div class="farmer-row">
+      <div class="farmer-av">${f.name[0]}</div>
+      <div class="farmer-info">
+        <div class="farmer-name">${f.name}</div>
+        <div class="farmer-detail">📍 ${f.area} · 🌾 ${f.crops}</div>
+      </div>
+      <span class="farmer-soil-badge">${f.soil} Mitti</span>
+      <div class="farmer-dist">📏 ${f.dist}</div>
+    </div>`).join('');
+
+  // Scroll to results
+  setTimeout(()=>document.getElementById('resultSection').scrollIntoView({behavior:'smooth',block:'start'}),200);
+}
+</script>
+</body>
+</html>

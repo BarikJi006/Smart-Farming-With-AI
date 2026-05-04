@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroFlow — Smart Irrigation</title>
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+<div id="loginPage">
+  <div class="brand-side">
+    <a class="brand-logo" href="#">Agro<span class="drop">Flow</span> 💧</a>
+    <div class="brand-body">
+      <div class="brand-tag"><div class="pdot"></div>Smart Irrigation Technology</div>
+      <h1 class="brand-headline">Grow More.<br><span class="green">Waste Nothing.</span><br>Farm <span class="gold">Smarter.</span></h1>
+      <p class="brand-desc">AgroFlow uses real-time soil sensors and intelligent scheduling to give your crops the exact water they need — built for Indian farmers.</p>
+      <div class="brand-perks">
+        <div class="perk"><div class="perk-dot">🌱</div>Smart Soil Detector — identify your soil type</div>
+        <div class="perk"><div class="perk-dot">📅</div>Auto Scheduling — right crop at the right time</div>
+        <div class="perk"><div class="perk-dot">💧</div>Water Analytics — track every drop used</div>
+        <div class="perk"><div class="perk-dot">🌧️</div>Weather Integration — predict rainfall accurately</div>
+        <div class="perk"><div class="perk-dot">📱</div>SMS Alerts — instant leak & failure notifications</div>
+      </div>
+    </div>
+    <div class="brand-trust">
+      <div class="trust-item"><div class="trust-num">40%</div><div class="trust-lbl">Water<br>Saved</div></div>
+      <div class="trust-item"><div class="trust-num">2x</div><div class="trust-lbl">Better<br>Yield</div></div>
+      <div class="trust-item"><div class="trust-num">500+</div><div class="trust-lbl">Happy<br>Farmers</div></div>
+      <div class="trust-item"><div class="trust-num">7</div><div class="trust-lbl">Smart<br>Features</div></div>
+    </div>
+  </div>
+
+  <div class="form-side">
+    <div class="db-badge connecting" id="dbBadge"><div class="db-dot" id="dbDot"></div><span id="dbTxt">Connecting to Database...</span></div>
+    <div class="auth-tabs">
+      <button class="auth-tab-btn active" id="atab-login" onclick="switchAuthTab('login')">🔑 Sign In</button>
+      <button class="auth-tab-btn" id="atab-register" onclick="switchAuthTab('register')">🌱 Register</button>
+    </div>
+
+    <div class="auth-panel active" id="apanel-login">
+      <div class="form-title">Welcome Back! 👋</div>
+      <div class="form-sub">Sign in to your AgroFlow account and manage your farm smartly.</div>
+      <div class="msg-box" id="login-msg"></div>
+      <div class="fg"><label>📱 Mobile Number</label><input type="tel" id="login-mobile" placeholder="+91 98765 43210" maxlength="15"></div>
+      <div class="fg"><label>🔒 Password</label><div class="pw-wrap"><input type="password" id="login-pass" placeholder="Enter your password"><button class="pw-eye" onclick="togglePw('login-pass',this)">👁️</button></div></div>
+      <button class="submit-btn" id="login-btn" onclick="doLogin()"><span>Sign In →</span></button>
+      <div class="switch-link">Don't have an account? <a onclick="switchAuthTab('register')">Register here</a></div>
+    </div>
+
+    <div class="auth-panel" id="apanel-register">
+      <div class="form-title">Join AgroFlow 🌾</div>
+      <div class="form-sub">Create your free account and start using smart farming tools today.</div>
+      <div class="msg-box" id="reg-msg"></div>
+      <div class="fg"><label>👤 Full Name</label><input type="text" id="reg-name" placeholder="Your full name"></div>
+      <div class="fg"><label>📱 Mobile Number</label><input type="tel" id="reg-mobile" placeholder="+91 98765 43210" maxlength="15"></div>
+      <div class="fg"><label>🔒 Create Password</label><div class="pw-wrap"><input type="password" id="reg-pass" placeholder="Minimum 6 characters"><button class="pw-eye" onclick="togglePw('reg-pass',this)">👁️</button></div></div>
+      <div class="fg"><label>🔒 Confirm Password</label><div class="pw-wrap"><input type="password" id="reg-pass2" placeholder="Re-enter your password"><button class="pw-eye" onclick="togglePw('reg-pass2',this)">👁️</button></div></div>
+      <button class="submit-btn" id="reg-btn" onclick="doRegister()"><span>Create Free Account →</span></button>
+      <p class="terms-note">By registering, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
+      <div class="switch-link">Already have an account? <a onclick="switchAuthTab('login')">Sign in here</a></div>
+    </div>
+  </div>
+</div>
+
+<div id="mainSite" style="display:none">
+
+<nav id="mainNav">
+  <a class="nav-logo" href="#">Agro<span class="drop">Flow</span> 💧</a>
+  <ul class="nav-links">
+    <li><a href="#features" onclick="scrollTo('features')">Features</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#testimonials">Farmers Say</a></li>
+  </ul>
+  <div class="nav-cta">
+    <span class="user-name">👤 Welcome, <span id="navUserName">Farmer</span></span>
+    <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+  </div>
+  <div class="hamburger" id="ham" onclick="document.getElementById('mobileMenu').classList.toggle('open')">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features">Features</a>
+  <a href="#how">How It Works</a>
+  <a href="#testimonials">Farmers Say</a>
+  <a onclick="doLogout()" style="color:#ff8a80;cursor:pointer">🚪 Logout</a>
+</div>
+
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="rain" id="rainContainer"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow"><div class="pdot"></div>Smart Irrigation Technology</div>
+    <h1>Grow More.<br><span class="green">Waste Nothing.</span><br>Farm <span class="gold">Smarter.</span></h1>
+    <p class="hero-desc">AgroFlow uses real-time soil sensors and intelligent scheduling to give your crops the exact water they need — at the right time, every time. Built for Indian farmers. Made for Indian fields.</p>
+    <div class="hero-btns">
+      <button class="cta-main" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Explore Features</button>
+      <button class="cta-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">▶ How It Works</button>
+    </div>
+    <div class="hero-trust">
+      <div class="t-item"><div class="num">40%</div><div>Water<br>Saved</div></div>
+      <div class="t-item"><div class="num">2x</div><div>Better<br>Yield</div></div>
+      <div class="t-item"><div class="num">500+</div><div>Happy<br>Farmers</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee-strip">
+  <div class="marquee-track">
+    <div class="marquee-item"><span>💧</span>Real-time Soil Monitoring</div>
+    <div class="marquee-item"><span>🌾</span>Wheat · Rice · Sugarcane · Vegetables</div>
+    <div class="marquee-item"><span>📱</span>Mobile App Control</div>
+    <div class="marquee-item"><span>☀️</span>Weather-Adaptive Scheduling</div>
+    <div class="marquee-item"><span>⚡</span>40% Water Savings</div>
+    <div class="marquee-item"><span>🇮🇳</span>Made for Indian Farmers</div>
+    <div class="marquee-item"><span>🔔</span>Instant Leak Alerts</div>
+    <div class="marquee-item"><span>💧</span>Real-time Soil Monitoring</div>
+    <div class="marquee-item"><span>🌾</span>Wheat · Rice · Sugarcane · Vegetables</div>
+    <div class="marquee-item"><span>📱</span>Mobile App Control</div>
+    <div class="marquee-item"><span>☀️</span>Weather-Adaptive Scheduling</div>
+    <div class="marquee-item"><span>⚡</span>40% Water Savings</div>
+    <div class="marquee-item"><span>🇮🇳</span>Made for Indian Farmers</div>
+    <div class="marquee-item"><span>🔔</span>Instant Leak Alerts</div>
+  </div>
+</div>
+
+<section class="features" id="features">
+  <div class="feat-header stag">
+    <div class="sec-label">What We Offer</div>
+    <h2 class="sec-title">Designed for Real Farms,<br>Real Farmers</h2>
+    <p class="sec-body">Click on any feature to open the full interactive tool — powered by real data and smart algorithms.</p>
+  </div>
+  <div class="feat-grid">
+    
+    <div class="feat-card stag stag-d1">
+      <div class="feat-img-wrap"><img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&q=80" alt="Soil" loading="lazy"></div>
+      <div class="feat-body"><div class="feat-icon">🌡️</div><h3>Soil Moisture Sensing</h3><p>Identify your soil type, get crop recommendations and water requirements per acre.</p>
+      <button class="feat-open-btn" onclick="window.location.href='soil-moisture.html'">🔬 Open Tool →</button></div>
+    </div>
+    
+    <div class="feat-card stag stag-d2">
+      <div class="feat-img-wrap"><img src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&q=80" alt="Schedule" loading="lazy"></div>
+      <div class="feat-body"><div class="feat-icon">📅</div><h3>Auto Scheduling</h3><p>Get AI-powered crop schedule for next month based on your region and season.</p>
+      <button class="feat-open-btn" onclick="window.location.href='auto-scheduling.html'">📋 Open Tool →</button></div>
+    </div>
+    
+    <div class="feat-card stag stag-d3">
+      <div class="feat-img-wrap"><img src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&q=80" alt="Drip" loading="lazy"></div>
+      <div class="feat-body"><div class="feat-icon">💦</div><h3>Drip & Sprinkler</h3><p>Analyse rainfall predictions and get the right irrigation mode recommendation.</p>
+      <button class="feat-open-btn" onclick="window.location.href='drip-sprinkler.html'">🌧️ Open Tool →</button></div>
+    </div>
+    
+    <div class="feat-card stag stag-d4">
+      <div class="feat-img-wrap"><img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=600&q=80" alt="Analytics" loading="lazy"></div>
+      <div class="feat-body"><div class="feat-icon">📊</div><h3>Water Usage Analytics</h3><p>Calculate exact water requirements for any crop based on your field size in acres.</p>
+      <button class="feat-open-btn" onclick="window.location.href='water-analytics.html'">📊 Open Tool →</button></div>
+    </div>
+    
+    <div class="feat-card stag stag-d5">
+      <div class="feat-img-wrap"><img src="https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600&q=80" alt="Weather" loading="lazy"></div>
+      <div class="feat-body"><div class="feat-icon">🌦️</div><h3>Weather Integration</h3><p>City-wise weather display with rain probability forecast for smart irrigation.</p>
+      <button class="feat-open-btn" onclick="window.location.href='weather-integration.html'">☁️ Open Tool →</button></div>
+    </div>
+    
+    <div class="feat-card stag stag-d6">
+      <div class="feat-img-wrap"><img src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=600&q=80" alt="SMS" loading="lazy"></div>
+      <div class="feat-body"><div class="feat-icon">🔔</div><h3>Instant SMS Alerts</h3><p>Get alerts for pipeline leaks, pump failures, or critically dry zones instantly.</p>
+      <button class="feat-open-btn" onclick="window.location.href='sms-alerts.html'">📱 Open Tool →</button></div>
+    </div>
+    
+    <div class="feat-card stag stag-d1" style="grid-column:1/3">
+      <div class="feat-img-wrap"><img src="https://images.unsplash.com/photo-1535379453347-1ffd615e2e08?w=900&q=80" alt="Soil Detector" loading="lazy"></div>
+      <div class="feat-body"><div class="feat-icon">🔬</div><h3>Smart Soil Detector</h3><p>Upload a photo or select soil color — AI identifies your soil type, recommends crops, water need, health score & nearby farmers.</p>
+      <button class="feat-open-btn" onclick="window.location.href='soil-detector.html'">🌍 Open Soil Detector →</button></div>
+    </div>
+    
+  </div>
+</section>
+
+<section class="how" id="how">
+  <div class="how-inner">
+    <div class="how-text stag">
+      <div class="sec-label" style="color:var(--lime)">Simple Setup</div>
+      <h2 class="sec-title">Up & Running<br>in One Day</h2>
+      <p class="sec-body">No electrician, no engineer — our kit is designed for any farmer to set up alone, with step-by-step Hindi + English instructions.</p>
+      <div class="steps">
+        <div class="step stag stag-d1"><div class="step-num">1</div><div class="step-content"><h4>Install the Sensors</h4><p>Push our wireless soil sensors into the ground across your field zones. They connect automatically via Bluetooth.</p></div></div>
+        <div class="step stag stag-d2"><div class="step-num">2</div><div class="step-content"><h4>Connect the Hub</h4><p>Plug the AgroFlow hub near your pump. It talks to all sensors and controls your irrigation valves.</p></div></div>
+        <div class="step stag stag-d3"><div class="step-num">3</div><div class="step-content"><h4>Tell Us Your Crops</h4><p>Select what you're growing — wheat, rice, vegetables, sugarcane. The app loads the perfect moisture profile.</p></div></div>
+        <div class="step stag stag-d4"><div class="step-num">4</div><div class="step-content"><h4>Watch Your Farm Thrive</h4><p>AgroFlow irrigates automatically. You get live updates on your phone and your crops get exactly what they need.</p></div></div>
+      </div>
+    </div>
+    <div class="stag stag-d2">
+      <div class="how-img"><img src="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=900&q=85" alt="Farm" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<section class="testi" id="testimonials">
+  <div class="testi-header stag">
+    <div class="sec-label">Farmers Speak</div>
+    <h2 class="sec-title">Real Stories from<br>Real Fields</h2>
+    <p class="sec-body">Thousands of farmers across India have transformed their water usage and crop yield with AgroFlow.</p>
+  </div>
+  <div class="testi-grid">
+    <div class="tcard stag stag-d1"><div class="tcard-quote">"</div><div class="stars">★★★★★</div><p>Before AgroFlow, I used to flood my wheat fields twice a day. Now it runs automatically and my water bill dropped by ₹18,000 this season alone.</p><div class="tcard-author"><div class="tcard-av">R</div><div><div class="tcard-name">Ramesh Yadav</div><div class="tcard-loc">Wheat Farmer, Haryana</div></div></div></div>
+    <div class="tcard stag stag-d2"><div class="tcard-quote">"</div><div class="stars">★★★★★</div><p>The mobile app is so easy even my 60-year-old father can use it. Setup took 3 hours. Within a week I could see the soil readings from my phone.</p><div class="tcard-author"><div class="tcard-av">P</div><div><div class="tcard-name">Priya Nair</div><div class="tcard-loc">Vegetable Farmer, Kerala</div></div></div></div>
+    <div class="tcard stag stag-d3"><div class="tcard-quote">"</div><div class="stars">★★★★★</div><p>My rice yield went up 35% this harvest. The automatic weather detection is fantastic — when it rained for 3 days the system stopped irrigation by itself.</p><div class="tcard-author"><div class="tcard-av">S</div><div><div class="tcard-name">Sukhvinder Singh</div><div class="tcard-loc">Rice Farmer, Punjab</div></div></div></div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-main">
+    <div class="footer-brand-col">
+      <a class="nav-logo" href="#">Agro<span class="drop">Flow</span> 💧</a>
+      <p>Smart irrigation technology built for Indian farmers. Save water, protect your crops, and grow more with AgroFlow.</p>
+    </div>
+    <div class="footer-col"><h5>Product</h5><a href="#features">Features</a><a href="#how">How It Works</a><a href="#testimonials">Farmers Say</a></div>
+    <div class="footer-col"><h5>Support</h5><a href="#">User Guide</a><a href="#">Installation Manual</a><a href="#">Contact Support</a></div>
+    <div class="footer-col"><h5>Company</h5><a href="#">About AgroFlow</a><a href="#">Privacy Policy</a><a href="#">Terms of Use</a></div>
+  </div>
+  <div class="footer-bottom"><p>© 2025 AgroFlow Smart Irrigation. All rights reserved.</p><p>Made with 💚 for farmers across India</p></div>
+</footer>
+
+</div><script>
+// ===== SUPABASE CONFIG =====
+const SUPA_URL = 'https://qzlnehmfqeyxschlvjfm.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6bG5laG1mcWV5eHNjaGx2amZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTc4NTgsImV4cCI6MjA4OTc3Mzg1OH0.uNh8JNgZkDYB0lIu7PfJWLc3hNOI0u6YW_a0fHzCQkU';
+const H = {'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY};
+
+async function dbGet(table,q=''){const r=await fetch(`${SUPA_URL}/rest/v1/${table}?${q}`,{headers:{...H,'Accept':'application/json'}});if(!r.ok)throw new Error(await r.text());return r.json()}
+async function dbPost(table,data){const r=await fetch(`${SUPA_URL}/rest/v1/${table}`,{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(data)});if(!r.ok)throw new Error(await r.text());return r.json()}
+async function hashPw(pw){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('')}
+
+// ===== DB STATUS =====
+async function checkDB(){
+  try{
+    await dbGet('users','limit=1');
+    document.getElementById('dbBadge').className='db-badge connected';
+    document.getElementById('dbDot').className='db-dot still';
+    document.getElementById('dbTxt').textContent='🟢 Supabase Connected';
+  }catch(e){
+    document.getElementById('dbBadge').className='db-badge offline';
+    document.getElementById('dbTxt').textContent='🔴 Database Offline';
+  }
+}
+
+// ===== AUTH TAB =====
+function switchAuthTab(tab){
+  ['login','register'].forEach(t=>{
+    document.getElementById('atab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('apanel-'+t).classList.toggle('active',t===tab);
+  });
+  hideMsg('login-msg'); hideMsg('reg-msg');
+}
+function togglePw(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁️':'🙈'}
+function showMsg(id,type,text){const el=document.getElementById(id);el.className='msg-box '+type;el.textContent=text;el.style.display='block'}
+function hideMsg(id){const el=document.getElementById(id);if(el)el.style.display='none'}
+function setBtn(id,loading,label){const b=document.getElementById(id);b.disabled=loading;b.innerHTML=loading?'<div class="spin"></div><span>Please wait...</span>':'<span>'+label+'</span>'}
+
+// ===== REGISTER =====
+async function doRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const mobile=document.getElementById('reg-mobile').value.replace(/\D/g,'');
+  const pass=document.getElementById('reg-pass').value;
+  const pass2=document.getElementById('reg-pass2').value;
+  if(!name){showMsg('reg-msg','error','❌ Please enter your full name');return}
+  if(mobile.length<10){showMsg('reg-msg','error','❌ Please enter a valid 10-digit mobile number');return}
+  if(pass.length<6){showMsg('reg-msg','error','❌ Password must be at least 6 characters');return}
+  if(pass!==pass2){showMsg('reg-msg','error','❌ Passwords do not match');return}
+  setBtn('reg-btn',true,'');
+  try{
+    const existing=await dbGet('users','mobile=eq.'+mobile+'&select=id');
+    if(existing.length>0){showMsg('reg-msg','error','❌ This mobile is already registered. Sign in.');setBtn('reg-btn',false,'Create Free Account →');return}
+    const hashed=await hashPw(pass);
+    const result=await dbPost('users',{name,mobile,password:hashed,state:'',acres:0});
+    const user=result[0];
+    saveSession(user);
+    showMsg('reg-msg','success','✅ Account created! Welcome, '+name+'! 🌾');
+    setBtn('reg-btn',false,'Create Free Account →');
+    setTimeout(()=>showMainSite(user.name),1200);
+  }catch(e){
+    // Fallback to localStorage
+    const users=JSON.parse(localStorage.getItem('af_users')||'[]');
+    if(users.find(u=>u.mobile===mobile)){showMsg('reg-msg','error','❌ This mobile is already registered.');setBtn('reg-btn',false,'Create Free Account →');return}
+    const hashed=await hashPw(pass);
+    const user={id:'local_'+Date.now(),name,mobile,password:hashed};
+    users.push(user);
+    localStorage.setItem('af_users',JSON.stringify(users));
+    saveSession(user);
+    showMsg('reg-msg','success','✅ Account created! Welcome, '+name+'! 🌾');
+    setBtn('reg-btn',false,'Create Free Account →');
+    setTimeout(()=>showMainSite(user.name),1200);
+  }
+}
+
+// ===== LOGIN =====
+async function doLogin(){
+  const mobile=document.getElementById('login-mobile').value.replace(/\D/g,'');
+  const pass=document.getElementById('login-pass').value;
+  if(!mobile){showMsg('login-msg','error','❌ Please enter your mobile number');return}
+  if(!pass){showMsg('login-msg','error','❌ Please enter your password');return}
+  setBtn('login-btn',true,'');
+  try{
+    const hashed=await hashPw(pass);
+    const users=await dbGet('users','mobile=eq.'+mobile+'&password=eq.'+hashed+'&select=id,name,mobile');
+    if(users.length===0){showMsg('login-msg','error','❌ Incorrect mobile or password.');setBtn('login-btn',false,'Sign In →');return}
+    const user=users[0];
+    saveSession(user);
+    showMsg('login-msg','success','✅ Login successful! Welcome back, '+user.name+'! 🌱');
+    setBtn('login-btn',false,'Sign In →');
+    setTimeout(()=>showMainSite(user.name),1000);
+  }catch(e){
+    // Fallback localStorage
+    const hashed=await hashPw(pass);
+    const users=JSON.parse(localStorage.getItem('af_users')||'[]');
+    const user=users.find(u=>u.mobile===mobile&&u.password===hashed);
+    if(!user){showMsg('login-msg','error','❌ Incorrect mobile or password.');setBtn('login-btn',false,'Sign In →');return}
+    saveSession(user);
+    showMsg('login-msg','success','✅ Login successful! Welcome back, '+user.name+'! 🌱');
+    setBtn('login-btn',false,'Sign In →');
+    setTimeout(()=>showMainSite(user.name),1000);
+  }
+}
+
+function saveSession(user){localStorage.setItem('af_session',JSON.stringify({id:user.id,name:user.name,mobile:user.mobile,time:new Date().toISOString()}))}
+
+// ===== SHOW MAIN SITE =====
+function showMainSite(name){
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('mainSite').style.display='block';
+  document.getElementById('navUserName').textContent=name||'Farmer';
+  initMainSite();
+}
+
+// ===== LOGOUT =====
+function doLogout(){
+  if(confirm('Are you sure you want to logout?')){
+    localStorage.removeItem('af_session');
+    document.getElementById('mainSite').style.display='none';
+    document.getElementById('loginPage').style.display='flex';
+  }
+}
+
+// ===== ENTER KEY =====
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  if(document.getElementById('apanel-login').classList.contains('active'))doLogin();
+  else doRegister();
+});
+
+// ===== MAIN SITE INIT =====
+function initMainSite(){
+  // Rain
+  const c=document.getElementById('rainContainer');
+  if(c&&!c.dataset.init){c.dataset.init=1;for(let i=0;i<60;i++){const d=document.createElement('div');d.className='rdrop';d.style.cssText=`left:${Math.random()*100}%;height:${Math.random()*60+30}px;animation-duration:${Math.random()*1.5+1}s;animation-delay:${Math.random()*4}s;opacity:${Math.random()*.4+.1}`;c.appendChild(d)}}
+  // Scroll reveal
+  const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')}),{threshold:.1});
+  document.querySelectorAll('.stag').forEach(el=>obs.observe(el));
+  // Nav scroll
+  window.addEventListener('scroll',()=>document.getElementById('mainNav').classList.toggle('scrolled',window.scrollY>40));
+}
+
+// ===== CHECK EXISTING SESSION =====
+window.addEventListener('load',()=>{
+  checkDB();
+  const s=localStorage.getItem('af_session');
+  if(s){try{const u=JSON.parse(s);showMainSite(u.name)}catch(e){localStorage.removeItem('af_session')}}
+});
+
+</script>
+</body>
+</html>

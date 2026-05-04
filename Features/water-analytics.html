@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgroFlow — Water Usage Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--earth:#1a3a0e;--leaf:#2d6a1f;--sprout:#5a9e2f;--lime:#7ec850;--mist:#c8e6a8;--sky:#eaf5e1;--gold:#c8870a;--amber:#f0a830;--cream:#f7f4ec;--white:#ffffff;--text:#152b0a;--muted:#5a7050;--dark:#0e1f08}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden}
+nav{background:rgba(14,31,8,0.97);padding:0 6%;display:flex;align-items:center;justify-content:space-between;height:64px;border-bottom:1px solid rgba(90,158,47,0.25)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--lime);text-decoration:none}
+.nav-logo .drop{color:var(--amber);font-style:italic}
+.nav-badge{background:rgba(90,158,47,.2);border:1px solid rgba(90,158,47,.4);color:var(--lime);padding:4px 14px;border-radius:100px;font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.page-hero{background:linear-gradient(135deg,var(--dark) 0%,#0d3320 50%,var(--leaf) 100%);padding:60px 6%;position:relative;overflow:hidden}
+.page-hero::before{content:'📊';position:absolute;right:5%;top:50%;transform:translateY(-50%);font-size:10rem;opacity:.06}
+.tag{display:inline-flex;align-items:center;gap:8px;background:rgba(90,158,47,.18);border:1px solid rgba(90,158,47,.4);color:var(--lime);padding:5px 14px;border-radius:100px;font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:18px}
+.pdot{width:7px;height:7px;border-radius:50%;background:var(--lime);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(126,200,80,.7)}50%{box-shadow:0 0 0 8px rgba(126,200,80,0)}}
+.page-hero h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:900;color:#fff;line-height:1.1;margin-bottom:14px}
+.page-hero h1 span{color:var(--lime)}
+.page-hero p{color:rgba(200,230,168,.75);font-size:1rem;line-height:1.7;max-width:560px;font-weight:300}
+.main{padding:48px 6%;max-width:1300px;margin:0 auto}
+.card{background:var(--white);border-radius:20px;padding:32px;box-shadow:0 4px 24px rgba(26,58,14,.07);border:1px solid rgba(90,158,47,.1);animation:fadeUp .6s ease both;margin-bottom:24px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.card-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--earth);margin-bottom:6px}
+.card-sub{color:var(--muted);font-size:.85rem;margin-bottom:24px;line-height:1.6}
+
+/* INPUT ROW */
+.input-row{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:12px;align-items:end;margin-bottom:8px}
+.ctrl-group label{display:block;font-size:.8rem;font-weight:700;color:var(--earth);margin-bottom:7px}
+.ctrl-group select,.ctrl-group input{width:100%;padding:11px 14px;border:1.5px solid #d4e8c0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--text);background:var(--sky);outline:none;transition:all .25s}
+.ctrl-group select:focus,.ctrl-group input:focus{border-color:var(--sprout);background:#fff;box-shadow:0 0 0 3px rgba(90,158,47,.1)}
+.calc-btn{padding:11px 24px;background:linear-gradient(135deg,var(--leaf),var(--sprout));color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .3s;height:44px}
+.calc-btn:hover{background:linear-gradient(135deg,var(--sprout),var(--lime));transform:translateY(-2px);box-shadow:0 6px 18px rgba(90,158,47,.35)}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--sky);border-radius:16px;padding:22px 20px;border-left:4px solid var(--sprout);position:relative;overflow:hidden}
+.stat-card::before{position:absolute;right:12px;top:12px;font-size:2rem;opacity:.15}
+.stat-card.s1::before{content:'💧'}.stat-card.s2::before{content:'🌾'}.stat-card.s3::before{content:'📅'}.stat-card.s4::before{content:'⚡'}
+.stat-val{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--earth);margin-bottom:4px}
+.stat-lbl{font-size:.75rem;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.stat-change{font-size:.75rem;margin-top:6px}
+.stat-change.up{color:#e74c3c}.stat-change.down{color:var(--sprout)}
+
+/* BAR CHART */
+.bar-chart{display:flex;align-items:flex-end;gap:12px;height:200px;padding-bottom:8px;border-bottom:2px solid rgba(90,158,47,.12);margin-bottom:12px}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1}
+.bar-fill{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--lime),var(--sprout));transition:height 1.2s cubic-bezier(.22,1,.36,1);min-height:4px;position:relative;cursor:pointer}
+.bar-fill:hover{background:linear-gradient(180deg,var(--amber),var(--gold))}
+.bar-fill .bar-tip{position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--earth);color:#fff;font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none}
+.bar-fill:hover .bar-tip{opacity:1}
+.bar-lbl{font-size:.7rem;font-weight:600;color:var(--muted);text-align:center;line-height:1.2}
+.bar-val{font-size:.7rem;font-weight:700;color:var(--earth)}
+
+/* CROP COMPARISON TABLE */
+.crop-table{width:100%;border-collapse:collapse}
+.crop-table th{background:var(--earth);color:var(--mist);font-size:.78rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 16px;text-align:left}
+.crop-table th:first-child{border-radius:10px 0 0 0}
+.crop-table th:last-child{border-radius:0 10px 0 0}
+.crop-table td{padding:14px 16px;border-bottom:1px solid rgba(90,158,47,.07);font-size:.87rem;vertical-align:middle}
+.crop-table tr:last-child td{border-bottom:none}
+.crop-table tr:hover td{background:var(--sky)}
+.water-level-bar{display:flex;align-items:center;gap:8px}
+.mini-track{flex:1;height:8px;background:rgba(90,158,47,.1);border-radius:4px;overflow:hidden}
+.mini-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--sprout),var(--lime));transition:width 1.2s ease}
+.efficiency-chip{padding:3px 10px;border-radius:100px;font-size:.72rem;font-weight:700}
+.eff-high{background:rgba(90,158,47,.15);color:var(--leaf)}
+.eff-med{background:rgba(240,168,48,.15);color:var(--gold)}
+.eff-low{background:rgba(231,76,60,.12);color:#c0392b}
+.crop-emoji-lbl{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--earth)}
+
+/* TWO-COL LAYOUT */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+
+/* WATER SAVING TIPS */
+.tips-list{display:flex;flex-direction:column;gap:10px}
+.tip-item{display:flex;align-items:flex-start;gap:12px;background:var(--sky);border-radius:10px;padding:14px}
+.tip-icon{font-size:1.2rem;flex-shrink:0}
+.tip-text{font-size:.85rem;color:var(--text);line-height:1.5}
+.tip-text strong{color:var(--earth);display:block;margin-bottom:2px}
+
+/* COST CALC */
+.cost-box{background:linear-gradient(135deg,rgba(200,135,10,.06),rgba(240,168,48,.04));border:1.5px solid rgba(240,168,48,.25);border-radius:14px;padding:20px 22px}
+.cost-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(90,158,47,.08)}
+.cost-row:last-child{border-bottom:none;margin-top:4px}
+.cost-label{font-size:.85rem;color:var(--muted)}
+.cost-val{font-size:.9rem;font-weight:700;color:var(--earth)}
+.cost-total .cost-label{font-weight:700;color:var(--earth);font-size:.9rem}
+.cost-total .cost-val{color:var(--gold);font-size:1.1rem;font-family:'Playfair Display',serif}
+
+@media(max-width:1000px){.stat-grid{grid-template-columns:repeat(2,1fr)}.input-row{grid-template-columns:1fr 1fr}.two-col{grid-template-columns:1fr}.bar-chart{gap:6px}}
+@media(max-width:600px){.stat-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="#">Agro<span class="drop">Flow</span> 💧</a>
+  <span class="nav-badge">📊 Feature 04</span>
+</nav>
+
+<div class="page-hero">
+  <div class="tag"><div class="pdot"></div>Water Analytics Module</div>
+  <h1>Water Usage <span>Analytics</span></h1>
+  <p>Calculate exact water requirements for any crop based on your field size in acres — with monthly breakdown, cost estimation, and efficiency tips.</p>
+</div>
+
+<div class="main">
+
+  <!-- CALCULATOR -->
+  <div class="card" style="animation-delay:.1s">
+    <div class="card-title">💧 Water Requirement Calculator</div>
+    <div class="card-sub">Select crop, enter field size, and get a complete water usage breakdown.</div>
+    <div class="input-row">
+      <div class="ctrl-group">
+        <label>Crop</label>
+        <select id="cropSel">
+          <option value="wheat">🌾 Wheat</option>
+          <option value="rice">🌾 Rice / Paddy</option>
+          <option value="cotton">🌿 Cotton</option>
+          <option value="sugarcane">🎋 Sugarcane</option>
+          <option value="maize">🌽 Maize</option>
+          <option value="groundnut">🥜 Groundnut</option>
+          <option value="vegetables">🥦 Vegetables</option>
+          <option value="soybean">🫘 Soybean</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>Field Area (Acres)</label>
+        <input type="number" id="acreInput" placeholder="e.g. 2.5" min="0.5" step="0.5" value="2">
+      </div>
+      <div class="ctrl-group">
+        <label>Growth Stage</label>
+        <select id="stageSel">
+          <option value="sowing">Sowing Stage</option>
+          <option value="vegetative">Vegetative Stage</option>
+          <option value="flowering">Flowering Stage</option>
+          <option value="maturity">Maturity Stage</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>Season</label>
+        <select id="seasonSel">
+          <option value="kharif">Kharif (Jun-Oct)</option>
+          <option value="rabi">Rabi (Nov-Apr)</option>
+          <option value="zaid">Zaid (Mar-Jun)</option>
+        </select>
+      </div>
+      <button class="calc-btn" onclick="calculate()">Calculate</button>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stat-grid" id="statGrid">
+    <div class="stat-card s1"><div class="stat-val" id="s1">—</div><div class="stat-lbl">Litres / Day</div><div class="stat-change" id="s1c">—</div></div>
+    <div class="stat-card s2"><div class="stat-val" id="s2">—</div><div class="stat-lbl">Total Season (KL)</div><div class="stat-change" id="s2c">—</div></div>
+    <div class="stat-card s3"><div class="stat-val" id="s3">—</div><div class="stat-lbl">Irrigation Cycles/Wk</div><div class="stat-change" id="s3c">—</div></div>
+    <div class="stat-card s4"><div class="stat-val" id="s4">—</div><div class="stat-lbl">Estimated Cost (₹)</div><div class="stat-change" id="s4c">—</div></div>
+  </div>
+
+  <!-- BAR CHART -->
+  <div class="card" style="animation-delay:.2s">
+    <div class="card-title">📈 Monthly Water Usage Trend</div>
+    <div class="card-sub" id="chartSub">Calculate to see monthly usage chart</div>
+    <div class="bar-chart" id="barChart">
+      <div style="display:flex;align-items:center;justify-content:center;width:100%;color:var(--muted);font-style:italic;font-size:.9rem">Click Calculate to generate chart</div>
+    </div>
+    <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:4px" id="barLabels"></div>
+  </div>
+
+  <!-- TABLE + COST -->
+  <div class="two-col">
+    <div class="card" style="animation-delay:.3s">
+      <div class="card-title">🌾 Crop Water Comparison</div>
+      <div class="card-sub">Water requirements comparison across major crops</div>
+      <div style="overflow-x:auto">
+        <table class="crop-table">
+          <thead><tr><th>Crop</th><th>L/sqm/day</th><th>Usage Level</th><th>Efficiency</th></tr></thead>
+          <tbody>
+            <tr><td><span class="crop-emoji-lbl">🌾 Wheat</span></td><td>2.8</td><td><div class="water-level-bar"><div class="mini-track"><div class="mini-fill" style="width:55%"></div></div></div></td><td><span class="efficiency-chip eff-high">High</span></td></tr>
+            <tr><td><span class="crop-emoji-lbl">🌾 Rice</span></td><td>5.2</td><td><div class="water-level-bar"><div class="mini-track"><div class="mini-fill" style="width:95%"></div></div></div></td><td><span class="efficiency-chip eff-low">Low</span></td></tr>
+            <tr><td><span class="crop-emoji-lbl">🌿 Cotton</span></td><td>3.2</td><td><div class="water-level-bar"><div class="mini-track"><div class="mini-fill" style="width:62%"></div></div></div></td><td><span class="efficiency-chip eff-med">Medium</span></td></tr>
+            <tr><td><span class="crop-emoji-lbl">🎋 Sugarcane</span></td><td>4.8</td><td><div class="water-level-bar"><div class="mini-track"><div class="mini-fill" style="width:90%"></div></div></div></td><td><span class="efficiency-chip eff-low">Low</span></td></tr>
+            <tr><td><span class="crop-emoji-lbl">🌽 Maize</span></td><td>2.5</td><td><div class="water-level-bar"><div class="mini-track"><div class="mini-fill" style="width:48%"></div></div></div></td><td><span class="efficiency-chip eff-high">High</span></td></tr>
+            <tr><td><span class="crop-emoji-lbl">🥜 Groundnut</span></td><td>2.6</td><td><div class="water-level-bar"><div class="mini-track"><div class="mini-fill" style="width:50%"></div></div></div></td><td><span class="efficiency-chip eff-high">High</span></td></tr>
+            <tr><td><span class="crop-emoji-lbl">🥦 Vegetables</span></td><td>3.5</td><td><div class="water-level-bar"><div class="mini-track"><div class="mini-fill" style="width:67%"></div></div></div></td><td><span class="efficiency-chip eff-med">Medium</span></td></tr>
+            <tr><td><span class="crop-emoji-lbl">🫘 Soybean</span></td><td>2.9</td><td><div class="water-level-bar"><div class="mini-track"><div class="mini-fill" style="width:56%"></div></div></div></td><td><span class="efficiency-chip eff-high">High</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <!-- COST BOX -->
+      <div class="card" style="animation-delay:.4s">
+        <div class="card-title">💰 Water Cost Estimate</div>
+        <div class="card-sub" id="costSub">Per-season water cost breakdown</div>
+        <div class="cost-box" id="costBox">
+          <div class="cost-row"><span class="cost-label">Daily Usage</span><span class="cost-val" id="c1">—</span></div>
+          <div class="cost-row"><span class="cost-label">Weekly Usage</span><span class="cost-val" id="c2">—</span></div>
+          <div class="cost-row"><span class="cost-label">Monthly Usage</span><span class="cost-val" id="c3">—</span></div>
+          <div class="cost-row"><span class="cost-label">Season Total</span><span class="cost-val" id="c4">—</span></div>
+          <div class="cost-row cost-total"><span class="cost-label">💰 Estimated Cost</span><span class="cost-val" id="c5">—</span></div>
+        </div>
+      </div>
+
+      <!-- TIPS -->
+      <div class="card" style="animation-delay:.5s">
+        <div class="card-title">💡 Water Saving Tips</div>
+        <div class="tips-list">
+          <div class="tip-item"><div class="tip-icon">⏰</div><div class="tip-text"><strong>Irrigate Early Morning</strong>Reduces evaporation loss by up to 30%. Best time: 5 AM – 7 AM.</div></div>
+          <div class="tip-item"><div class="tip-icon">🌱</div><div class="tip-text"><strong>Mulching</strong>Spread straw/dry leaves around plants to retain 25% more moisture.</div></div>
+          <div class="tip-item"><div class="tip-icon">💧</div><div class="tip-text"><strong>Drip Irrigation</strong>Use drip system to save 40–50% water compared to flood irrigation.</div></div>
+          <div class="tip-item"><div class="tip-icon">📊</div><div class="tip-text"><strong>Soil Moisture Monitoring</strong>Check moisture before each cycle — avoid over-watering which wastes water.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cropData = {
+  wheat:      {lpm:2.8, season:120, cycles:2, name:'Wheat'},
+  rice:       {lpm:5.2, season:140, cycles:6, name:'Rice'},
+  cotton:     {lpm:3.2, season:160, cycles:3, name:'Cotton'},
+  sugarcane:  {lpm:4.8, season:300, cycles:5, name:'Sugarcane'},
+  maize:      {lpm:2.5, season:90,  cycles:2, name:'Maize'},
+  groundnut:  {lpm:2.6, season:110, cycles:2, name:'Groundnut'},
+  vegetables: {lpm:3.5, season:60,  cycles:4, name:'Vegetables'},
+  soybean:    {lpm:2.9, season:100, cycles:2, name:'Soybean'},
+};
+const stageMult = {sowing:0.7, vegetative:1.0, flowering:1.25, maturity:0.6};
+const months3 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function calculate(){
+  const crop = document.getElementById('cropSel').value;
+  const acres = parseFloat(document.getElementById('acreInput').value);
+  const stage = document.getElementById('stageSel').value;
+  if(!acres||acres<=0){alert('Enter valid field area');return;}
+
+  const d = cropData[crop];
+  const sqm = acres * 4047;
+  const mult = stageMult[stage];
+  const litresPerDay = Math.round(d.lpm * sqm * mult);
+  const totalKL = Math.round(litresPerDay * d.season / 1000);
+  const cycles = d.cycles;
+  const costPerKL = 4; // ₹4 per KL (approx)
+  const totalCost = Math.round(totalKL * costPerKL);
+
+  // Stats
+  document.getElementById('s1').textContent = litresPerDay.toLocaleString()+'L';
+  document.getElementById('s1c').innerHTML = `<span>For ${acres} acres</span>`;
+  document.getElementById('s2').textContent = totalKL.toLocaleString()+'KL';
+  document.getElementById('s2c').innerHTML = `<span>${d.season} day season</span>`;
+  document.getElementById('s3').textContent = cycles;
+  document.getElementById('s3c').innerHTML = `<span>Per week</span>`;
+  document.getElementById('s4').textContent = '₹'+totalCost.toLocaleString();
+  document.getElementById('s4c').innerHTML = `<span>Season total</span>`;
+
+  // Cost box
+  document.getElementById('c1').textContent = litresPerDay.toLocaleString()+' L';
+  document.getElementById('c2').textContent = (litresPerDay*7).toLocaleString()+' L';
+  document.getElementById('c3').textContent = Math.round(litresPerDay*30/1000).toLocaleString()+' KL';
+  document.getElementById('c4').textContent = totalKL.toLocaleString()+' KL';
+  document.getElementById('c5').textContent = '₹'+totalCost.toLocaleString();
+  document.getElementById('costSub').textContent = `${d.name} · ${acres} acres · ${stage} stage`;
+
+  // Bar chart - monthly breakdown
+  const now = new Date();
+  const chartData = [];
+  for(let i=0;i<6;i++){
+    const m = (now.getMonth() + i) % 12;
+    // Vary usage by growth stage curve
+    const curve = [0.6,0.8,1.0,1.2,1.1,0.7];
+    chartData.push({month:months3[m], kl:Math.round(litresPerDay*30*curve[i]/1000)});
+  }
+  const maxKL = Math.max(...chartData.map(d=>d.kl));
+  const chart = document.getElementById('barChart');
+  chart.innerHTML = chartData.map(d=>`
+    <div class="bar-col">
+      <div class="bar-val">${d.kl}KL</div>
+      <div class="bar-fill" style="height:0%" data-h="${Math.round((d.kl/maxKL)*160)}px">
+        <div class="bar-tip">${d.kl} KL / month</div>
+      </div>
+      <div class="bar-lbl">${d.month}</div>
+    </div>`).join('');
+  setTimeout(()=>chart.querySelectorAll('.bar-fill').forEach(el=>{el.style.height=el.dataset.h}),100);
+  document.getElementById('chartSub').textContent = `${d.name} — next 6 months water usage for ${acres} acres`;
+}
+
+// Auto-calculate on load
+calculate();
+</script>
+</body>
+</html>
